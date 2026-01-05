@@ -82,13 +82,19 @@ export function useLeave() {
       .from('leave_requests')
       .select(`
         *,
-        profiles:user_id (
+        profiles!leave_requests_user_id_fkey (
           full_name,
           employee_id,
           department
         )
       `)
       .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching all leave requests:', error);
+      toast.error('Failed to load leave requests');
+      return;
+    }
 
     if (error) {
       console.error('Error fetching all leave requests:', error);
