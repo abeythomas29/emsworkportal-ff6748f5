@@ -89,7 +89,7 @@ export default function LoginPage() {
         toast.error('Signup failed', { description: error });
       } else {
         toast.success('Account created!', {
-          description: 'Welcome to EMS. You are now logged in.',
+          description: 'Welcome to Esoteric Mineral Solutions.',
         });
         navigate('/dashboard');
       }
@@ -112,12 +112,12 @@ export default function LoginPage() {
           <img src={emsLogo} alt="EMS" className="h-16 w-auto mb-8 brightness-0 invert" />
           
           <h1 className="text-4xl xl:text-5xl font-bold text-white mb-4">
-            Employee Management
-            <span className="text-primary block mt-2">Simplified</span>
+            Esoteric Mineral
+            <span className="text-primary block mt-2">Solutions</span>
           </h1>
           
           <p className="text-white/70 text-lg mb-10 max-w-md">
-            Streamline attendance tracking, leave management, and work hour logging all in one powerful platform.
+            Internal portal for attendance tracking, leave management, and work hour logging.
           </p>
 
           <div className="space-y-4">
@@ -291,8 +291,8 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-muted-foreground">
             Need help? Contact{' '}
-            <a href="#" className="text-primary hover:underline">
-              support@ems.com
+            <a href="mailto:support@esotericminerals.com" className="text-primary hover:underline">
+              support@esotericminerals.com
             </a>
           </p>
         </div>
