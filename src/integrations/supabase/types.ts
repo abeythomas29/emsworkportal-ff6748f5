@@ -53,6 +53,33 @@ export type Database = {
         }
         Relationships: []
       }
+      default_leave_settings: {
+        Row: {
+          casual_leave: number
+          earned_leave: number
+          id: string
+          sick_leave: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          casual_leave?: number
+          earned_leave?: number
+          id?: string
+          sick_leave?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          casual_leave?: number
+          earned_leave?: number
+          id?: string
+          sick_leave?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       leave_balances: {
         Row: {
           casual_leave: number
@@ -134,6 +161,39 @@ export type Database = {
         }
         Relationships: []
       }
+      policies: {
+        Row: {
+          category: string
+          content: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -146,6 +206,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           joining_date: string | null
+          phone_number: string | null
           updated_at: string
         }
         Insert: {
@@ -159,6 +220,7 @@ export type Database = {
           id: string
           is_active?: boolean | null
           joining_date?: string | null
+          phone_number?: string | null
           updated_at?: string
         }
         Update: {
@@ -172,6 +234,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           joining_date?: string | null
+          phone_number?: string | null
           updated_at?: string
         }
         Relationships: []

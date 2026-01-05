@@ -30,13 +30,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useEmployees } from '@/hooks/useEmployees';
+import { AddEmployeeDialog } from '@/components/employees/AddEmployeeDialog';
 
 export default function EmployeesPage() {
   const { role } = useAuth();
-  const { employees, isLoading } = useEmployees();
+  const { employees, isLoading, refetch } = useEmployees();
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   // Only admin and manager can access this
   if (role !== 'admin' && role !== 'manager') {
@@ -74,7 +76,7 @@ export default function EmployeesPage() {
             <p className="text-muted-foreground">{employees.length} total employees</p>
           </div>
           {role === 'admin' && (
-            <Button className="gap-2">
+            <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
               <UserPlus className="w-4 h-4" />
               Add Employee
             </Button>
@@ -206,6 +208,12 @@ export default function EmployeesPage() {
           </div>
         )}
       </div>
+
+      <AddEmployeeDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        onSuccess={refetch}
+      />
     </DashboardLayout>
   );
 }

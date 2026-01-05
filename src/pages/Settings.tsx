@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,14 +16,76 @@ import {
   Shield,
   Moon,
   Sun,
+  Loader2,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/hooks/useTheme';
+import { toast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: profile?.full_name || user?.name || '',
+    phoneNumber: (profile as any)?.phone_number || '',
+    department: profile?.department || '',
+  });
+
+  const handleSaveProfile = async () => {
+    if (!profile?.id) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: formData.fullName,
+          phone_number: formData.phoneNumber || null,
+          department: formData.department || null,
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
+      await refreshProfile();
+      
+      toast({
+        title: 'Profile Updated',
+        description: 'Your profile has been saved successfully.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update profile',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user?.email || '', {
+        redirectTo: `${window.location.origin}/settings`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Password Reset Email Sent',
+        description: 'Check your email for a password reset link.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to send reset email',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -43,11 +107,10 @@ export default function SettingsPage() {
           <CardContent className="space-y-6">
             <div className="flex items-center gap-6">
               <div className="w-20 h-20 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-2xl">
-                {user?.name?.charAt(0) || 'U'}
+                {formData.fullName?.charAt(0) || user?.name?.charAt(0) || 'U'}
               </div>
               <div>
-                <Button variant="outline" size="sm">Change Photo</Button>
-                <p className="text-xs text-muted-foreground mt-1">JPG, PNG max 2MB</p>
+                <p className="text-sm text-muted-foreground">Profile photo coming soon</p>
               </div>
             </div>
 
@@ -56,7 +119,10 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Full Name</Label>
-                <Input defaultValue={user?.name || ''} />
+                <Input
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Employee ID</Label>
@@ -73,14 +139,24 @@ export default function SettingsPage() {
                 <Label>Phone Number</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Enter phone number" className="pl-10" />
+                  <Input
+                    placeholder="Enter phone number"
+                    className="pl-10"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Department</Label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input defaultValue={user?.department || 'Not assigned'} className="pl-10" disabled />
+                  <Input
+                    placeholder="Enter department"
+                    className="pl-10"
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="space-y-2">
@@ -93,7 +169,10 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex justify-end">
-              <Button>Save Changes</Button>
+              <Button onClick={handleSaveProfile} disabled={isLoading}>
+                {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Save Changes
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -166,7 +245,9 @@ export default function SettingsPage() {
                 <p className="font-medium">Change Password</p>
                 <p className="text-sm text-muted-foreground">Update your password regularly for security</p>
               </div>
-              <Button variant="outline">Change</Button>
+              <Button variant="outline" onClick={handleChangePassword}>
+                Change
+              </Button>
             </div>
           </CardContent>
         </Card>
