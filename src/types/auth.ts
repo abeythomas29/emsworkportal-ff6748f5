@@ -1,6 +1,20 @@
-export type UserRole = 'admin' | 'manager' | 'employee_online' | 'employee_offline';
+export type UserRole = 'admin' | 'manager' | 'employee';
 
 export type EmployeeType = 'online' | 'offline';
+
+export interface Profile {
+  id: string;
+  email: string;
+  full_name: string;
+  employee_id: string | null;
+  department: string | null;
+  employee_type: EmployeeType;
+  joining_date: string | null;
+  avatar_url: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface User {
   id: string;
@@ -16,7 +30,10 @@ export interface User {
 
 export interface AuthState {
   user: User | null;
+  profile: Profile | null;
+  role: UserRole | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 export interface LeaveBalance {
@@ -26,15 +43,19 @@ export interface LeaveBalance {
   lwp: number;
 }
 
-export type AttendanceStatus = 'present' | 'absent' | 'half-day' | 'leave' | 'lwp' | 'holiday' | 'weekend';
+export type AttendanceStatus = 'present' | 'absent' | 'half_day' | 'leave' | 'lwp' | 'holiday' | 'weekend';
 
 export interface AttendanceRecord {
   id: string;
+  user_id: string;
   date: string;
+  check_in: string | null;
+  check_out: string | null;
   status: AttendanceStatus;
-  checkIn?: string;
-  checkOut?: string;
-  hoursWorked?: number;
+  total_hours: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export type LeaveType = 'casual' | 'sick' | 'earned' | 'lwp';
@@ -56,11 +77,11 @@ export interface LeaveRequest {
 
 export interface WorkLog {
   id: string;
-  employeeId: string;
+  user_id: string;
   date: string;
-  startTime: string;
-  endTime: string;
-  totalHours: number;
-  taskDescription: string;
-  status: 'submitted' | 'pending' | 'approved' | 'flagged';
+  start_time: string;
+  end_time: string;
+  total_hours: number;
+  task_description: string;
+  status: 'submitted' | 'pending_review' | 'approved' | 'flagged';
 }

@@ -2,8 +2,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/ui/stat-card';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { CheckInOutCard } from '@/components/attendance/CheckInOutCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useAttendance } from '@/hooks/useAttendance';
 import {
   Users,
   Clock,
@@ -17,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-// Mock data
+// Mock data for admin view (will be replaced with real data later)
 const todayStats = {
   present: 142,
   absent: 8,
@@ -31,13 +33,6 @@ const leaveRequests = [
   { id: 3, name: 'Michael Brown', type: 'Earned', days: 5, status: 'pending' as const },
 ];
 
-const recentActivity = [
-  { id: 1, action: 'Check-in', user: 'Alice Johnson', time: '09:02 AM', icon: <CheckCircle2 className="w-4 h-4 text-success" /> },
-  { id: 2, action: 'Leave Applied', user: 'Bob Williams', time: '08:45 AM', icon: <Calendar className="w-4 h-4 text-info" /> },
-  { id: 3, action: 'Late Arrival', user: 'Charlie Davis', time: '09:35 AM', icon: <AlertTriangle className="w-4 h-4 text-warning" /> },
-  { id: 4, action: 'Check-out', user: 'Diana Miller', time: '06:00 PM', icon: <XCircle className="w-4 h-4 text-muted-foreground" /> },
-];
-
 const departmentStats = [
   { name: 'Engineering', present: 45, total: 50, percentage: 90 },
   { name: 'Marketing', present: 28, total: 30, percentage: 93 },
@@ -47,8 +42,25 @@ const departmentStats = [
 ];
 
 export default function DashboardPage() {
-  const { user } = useAuth();
-  const isAdmin = user?.role === 'admin' || user?.role === 'manager';
+  const { user, role } = useAuth();
+  const { attendanceHistory, todayAttendance } = useAttendance();
+
+  const isAdmin = role === 'admin' || role === 'manager';
+
+  // Calculate stats from real attendance data
+  const daysWorkedThisMonth = attendanceHistory.filter(
+    (a) =>
+      new Date(a.date).getMonth() === new Date().getMonth() &&
+      a.status === 'present'
+  ).length;
+
+  const totalHoursThisMonth = attendanceHistory
+    .filter(
+      (a) =>
+        new Date(a.date).getMonth() === new Date().getMonth() &&
+        a.total_hours
+    )
+    .reduce((sum, a) => sum + (a.total_hours || 0), 0);
 
   return (
     <DashboardLayout>
@@ -57,21 +69,28 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Good morning, {user?.name.split(' ')[0]}!
+              Good morning, {user?.name?.split(' ')[0] || 'there'}!
             </h1>
             <p className="text-muted-foreground mt-1">
-              Here's what's happening today, {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              Here's what's happening today,{' '}
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+              })}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <StatusBadge status={user?.employeeType === 'online' ? 'present' : 'approved'} />
+            <StatusBadge
+              status={todayAttendance?.check_in ? 'present' : 'pending'}
+            />
             <span className="text-sm text-muted-foreground">
               {user?.employeeType === 'online' ? 'Online Employee' : 'Offline Employee'}
             </span>
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Admin Stats */}
         {isAdmin && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard
@@ -105,12 +124,12 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Employee View Stats */}
+        {/* Employee Stats */}
         {!isAdmin && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard
               title="Days Worked"
-              value="22"
+              value={daysWorkedThisMonth}
               subtitle="This month"
               icon={<CheckCircle2 className="w-6 h-6 text-success" />}
               variant="primary"
@@ -125,7 +144,7 @@ export default function DashboardPage() {
             {user?.employeeType === 'online' && (
               <StatCard
                 title="Hours Logged"
-                value="176"
+                value={totalHoursThisMonth.toFixed(1)}
                 subtitle="This month"
                 icon={<Clock className="w-6 h-6 text-primary" />}
                 variant="default"
@@ -133,7 +152,7 @@ export default function DashboardPage() {
             )}
             <StatCard
               title="Attendance Rate"
-              value="98%"
+              value={`${daysWorkedThisMonth > 0 ? Math.round((daysWorkedThisMonth / 22) * 100) : 0}%`}
               subtitle="This month"
               icon={<TrendingUp className="w-6 h-6 text-success" />}
               trend={{ value: 2.5, isPositive: true }}
@@ -143,11 +162,16 @@ export default function DashboardPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Check-in/out Card for all employees */}
+          <CheckInOutCard />
+
           {/* Pending Leave Requests - Admin/Manager */}
           {isAdmin && (
             <Card className="lg:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold">Pending Leave Requests</CardTitle>
+                <CardTitle className="text-lg font-semibold">
+                  Pending Leave Requests
+                </CardTitle>
                 <Link to="/leave-requests">
                   <Button variant="ghost" size="sm" className="text-primary">
                     View All <ArrowRight className="w-4 h-4 ml-1" />
@@ -166,18 +190,29 @@ export default function DashboardPage() {
                           {request.name.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-medium text-foreground">{request.name}</p>
+                          <p className="font-medium text-foreground">
+                            {request.name}
+                          </p>
                           <p className="text-sm text-muted-foreground">
-                            {request.type} Leave • {request.days} day{request.days > 1 ? 's' : ''}
+                            {request.type} Leave • {request.days} day
+                            {request.days > 1 ? 's' : ''}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <StatusBadge status={request.status} />
-                        <Button size="sm" variant="outline" className="text-success border-success hover:bg-success hover:text-success-foreground">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-success border-success hover:bg-success hover:text-success-foreground"
+                        >
                           Approve
                         </Button>
-                        <Button size="sm" variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        >
                           Reject
                         </Button>
                       </div>
@@ -192,7 +227,9 @@ export default function DashboardPage() {
           {!isAdmin && (
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
+                <CardTitle className="text-lg font-semibold">
+                  Quick Actions
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -216,71 +253,53 @@ export default function DashboardPage() {
                     <div className="p-6 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
                       <CheckCircle2 className="w-8 h-8 mb-3 text-primary" />
                       <h3 className="font-semibold text-lg">View Attendance</h3>
-                      <p className="text-sm text-muted-foreground">Check your records</p>
+                      <p className="text-sm text-muted-foreground">
+                        Check your records
+                      </p>
                     </div>
                   </Link>
                   <Link to="/settings">
                     <div className="p-6 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
                       <Users className="w-8 h-8 mb-3 text-accent" />
                       <h3 className="font-semibold text-lg">My Profile</h3>
-                      <p className="text-sm text-muted-foreground">Update information</p>
+                      <p className="text-sm text-muted-foreground">
+                        Update information
+                      </p>
                     </div>
                   </Link>
                 </div>
               </CardContent>
             </Card>
           )}
-
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted">
-                      {activity.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {activity.action}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{activity.user}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {activity.time}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Department Overview - Admin Only */}
         {isAdmin && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg font-semibold">Department Attendance</CardTitle>
+              <CardTitle className="text-lg font-semibold">
+                Department Attendance
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {departmentStats.map((dept) => (
                   <div key={dept.name} className="flex items-center gap-4">
-                    <div className="w-32 text-sm font-medium text-foreground">{dept.name}</div>
+                    <div className="w-32 text-sm font-medium text-foreground">
+                      {dept.name}
+                    </div>
                     <div className="flex-1">
                       <div className="h-3 bg-muted rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
                             width: `${dept.percentage}%`,
-                            background: dept.percentage >= 90
-                              ? 'hsl(var(--success))'
-                              : dept.percentage >= 75
-                              ? 'hsl(var(--warning))'
-                              : 'hsl(var(--destructive))',
+                            background:
+                              dept.percentage >= 90
+                                ? 'hsl(var(--success))'
+                                : dept.percentage >= 75
+                                ? 'hsl(var(--warning))'
+                                : 'hsl(var(--destructive))',
                           }}
                         />
                       </div>

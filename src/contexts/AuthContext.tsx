@@ -1,92 +1,182 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, UserRole, AuthState } from '@/types/auth';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Profile, UserRole, AuthState } from '@/types/auth';
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  switchRole: (role: UserRole) => void;
+  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  signup: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
+  logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo
-const mockUsers: Record<string, User> = {
-  'admin@ems.com': {
-    id: '1',
-    email: 'admin@ems.com',
-    name: 'Sarah Johnson',
-    role: 'admin',
-    employeeType: 'online',
-    department: 'Human Resources',
-    employeeId: 'EMP001',
-    joiningDate: '2020-01-15',
-  },
-  'manager@ems.com': {
-    id: '2',
-    email: 'manager@ems.com',
-    name: 'Michael Chen',
-    role: 'manager',
-    employeeType: 'online',
-    department: 'Engineering',
-    employeeId: 'EMP002',
-    joiningDate: '2020-03-10',
-  },
-  'online@ems.com': {
-    id: '3',
-    email: 'online@ems.com',
-    name: 'Emily Davis',
-    role: 'employee_online',
-    employeeType: 'online',
-    department: 'Development',
-    employeeId: 'EMP003',
-    joiningDate: '2021-06-20',
-  },
-  'offline@ems.com': {
-    id: '4',
-    email: 'offline@ems.com',
-    name: 'James Wilson',
-    role: 'employee_offline',
-    employeeType: 'offline',
-    department: 'Operations',
-    employeeId: 'EMP004',
-    joiningDate: '2022-02-01',
-  },
-};
+function mapProfileToUser(profile: Profile, role: UserRole): User {
+  return {
+    id: profile.id,
+    email: profile.email,
+    name: profile.full_name,
+    role: role,
+    employeeType: profile.employee_type,
+    department: profile.department || 'Unassigned',
+    employeeId: profile.employee_id || profile.id.slice(0, 8).toUpperCase(),
+    joiningDate: profile.joining_date || profile.created_at,
+    avatar: profile.avatar_url || undefined,
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-  });
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = async (email: string, _password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const user = mockUsers[email.toLowerCase()];
-    if (user) {
-      setAuthState({ user, isAuthenticated: true });
-      return true;
+  const fetchUserData = async (userId: string) => {
+    try {
+      // Fetch profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        return;
+      }
+
+      // Fetch role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (roleError) {
+        console.error('Error fetching role:', roleError);
+      }
+
+      const userRole = (roleData?.role as UserRole) || 'employee';
+      
+      if (profileData) {
+        setProfile(profileData as Profile);
+        setRole(userRole);
+        setUser(mapProfileToUser(profileData as Profile, userRole));
+      }
+    } catch (error) {
+      console.error('Error in fetchUserData:', error);
     }
-    return false;
   };
 
-  const logout = () => {
-    setAuthState({ user: null, isAuthenticated: false });
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        
+        if (session?.user) {
+          // Use setTimeout to prevent deadlock
+          setTimeout(() => {
+            fetchUserData(session.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
+          setRole(null);
+          setUser(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        fetchUserData(session.user.id);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const refreshProfile = async () => {
+    if (session?.user) {
+      await fetchUserData(session.user.id);
+    }
   };
 
-  const switchRole = (role: UserRole) => {
-    if (authState.user) {
-      const employeeType = role === 'employee_offline' ? 'offline' : 'online';
-      setAuthState({
-        ...authState,
-        user: { ...authState.user, role, employeeType },
+  const login = async (email: string, password: string): Promise<{ error: string | null }> => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
     }
+  };
+
+  const signup = async (email: string, password: string, fullName: string): Promise<{ error: string | null }> => {
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: fullName,
+            employee_type: 'offline',
+          },
+        },
+      });
+
+      if (error) {
+        if (error.message.includes('already registered')) {
+          return { error: 'This email is already registered. Please sign in instead.' };
+        }
+        return { error: error.message };
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    setProfile(null);
+    setRole(null);
+    setUser(null);
+  };
+
+  const value: AuthContextType = {
+    user,
+    profile,
+    role,
+    isAuthenticated: !!session && !!user,
+    isLoading,
+    login,
+    signup,
+    logout,
+    refreshProfile,
   };
 
   return (
-    <AuthContext.Provider value={{ ...authState, login, logout, switchRole }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
