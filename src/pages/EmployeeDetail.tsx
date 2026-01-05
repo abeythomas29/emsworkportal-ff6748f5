@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AttendanceCalendar } from '@/components/attendance/AttendanceCalendar';
 import { EditLeaveBalanceDialog } from '@/components/employees/EditLeaveBalanceDialog';
+import { EditProfileDialog } from '@/components/employees/EditProfileDialog';
 import {
   ArrowLeft,
   Mail,
@@ -76,6 +77,7 @@ export default function EmployeeDetailPage() {
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isEditProfileDialogOpen, setIsEditProfileDialogOpen] = useState(false);
 
   // Only admin and manager can access
   if (role !== 'admin' && role !== 'manager') {
@@ -147,6 +149,18 @@ export default function EmployeeDetailPage() {
     setLeaveBalance(data as LeaveBalance | null);
   };
 
+  const refetchProfile = async () => {
+    if (!id) return;
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (data) {
+      setProfile(data as EmployeeProfile);
+    }
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -190,6 +204,17 @@ export default function EmployeeDetailPage() {
                 <div className="flex items-center gap-3">
                   <h1 className="text-2xl font-bold text-foreground">{profile.full_name}</h1>
                   <StatusBadge status={profile.is_active ? 'approved' : 'rejected'} />
+                  {role === 'admin' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => setIsEditProfileDialogOpen(true)}
+                    >
+                      <Pencil className="w-4 h-4" />
+                      Edit
+                    </Button>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
@@ -398,6 +423,13 @@ export default function EmployeeDetailPage() {
           leaveBalance={leaveBalance}
           employeeName={profile.full_name}
           onSuccess={refetchLeaveBalance}
+        />
+
+        <EditProfileDialog
+          open={isEditProfileDialogOpen}
+          onOpenChange={setIsEditProfileDialogOpen}
+          profile={profile}
+          onSuccess={refetchProfile}
         />
       </div>
     </DashboardLayout>
