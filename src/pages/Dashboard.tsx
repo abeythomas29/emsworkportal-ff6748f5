@@ -229,7 +229,11 @@ export default function DashboardPage() {
                             </p>
                             <p className="text-sm text-muted-foreground">
                               {getLeaveTypeLabel(request.leave_type)} Leave • {request.days} day
-                              {Number(request.days) > 1 ? 's' : ''}
+                              {Number(request.days) > 1 ? 's' : ''} •{' '}
+                              {new Date(request.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              {request.start_date !== request.end_date && (
+                                <> - {new Date(request.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
+                              )}
                             </p>
                           </div>
                         </div>
