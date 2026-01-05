@@ -13,12 +13,15 @@ import {
   Bell,
   Shield,
   Moon,
+  Sun,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <DashboardLayout>
@@ -40,7 +43,7 @@ export default function SettingsPage() {
           <CardContent className="space-y-6">
             <div className="flex items-center gap-6">
               <div className="w-20 h-20 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-2xl">
-                {user?.name.charAt(0)}
+                {user?.name?.charAt(0) || 'U'}
               </div>
               <div>
                 <Button variant="outline" size="sm">Change Photo</Button>
@@ -53,44 +56,63 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Full Name</Label>
-                <Input defaultValue={user?.name} />
+                <Input defaultValue={user?.name || ''} />
               </div>
               <div className="space-y-2">
                 <Label>Employee ID</Label>
-                <Input defaultValue={user?.employeeId} disabled className="bg-muted" />
+                <Input defaultValue={user?.employeeId || 'Not assigned'} disabled className="bg-muted" />
               </div>
               <div className="space-y-2">
                 <Label>Email Address</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input defaultValue={user?.email} className="pl-10" />
+                  <Input defaultValue={user?.email || ''} className="pl-10" disabled />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Phone Number</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input defaultValue="+1 (555) 123-4567" className="pl-10" />
+                  <Input placeholder="Enter phone number" className="pl-10" />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Department</Label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input defaultValue={user?.department} className="pl-10" disabled />
+                  <Input defaultValue={user?.department || 'Not assigned'} className="pl-10" disabled />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Joining Date</Label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input defaultValue={user?.joiningDate} className="pl-10" disabled />
+                  <Input defaultValue={user?.joiningDate || 'Not set'} className="pl-10" disabled />
                 </div>
               </div>
             </div>
 
             <div className="flex justify-end">
               <Button>Save Changes</Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Appearance */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              Appearance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Dark Mode</p>
+                <p className="text-sm text-muted-foreground">Switch between light and dark themes</p>
+              </div>
+              <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
             </div>
           </CardContent>
         </Card>
@@ -127,14 +149,6 @@ export default function SettingsPage() {
               </div>
               <Switch defaultChecked />
             </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Low Leave Balance Alert</p>
-                <p className="text-sm text-muted-foreground">Notify when leave balance is below 3 days</p>
-              </div>
-              <Switch />
-            </div>
           </CardContent>
         </Card>
 
@@ -153,33 +167,6 @@ export default function SettingsPage() {
                 <p className="text-sm text-muted-foreground">Update your password regularly for security</p>
               </div>
               <Button variant="outline">Change</Button>
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Two-Factor Authentication</p>
-                <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
-              </div>
-              <Button variant="outline">Enable</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Appearance */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Moon className="w-5 h-5" />
-              Appearance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Dark Mode</p>
-                <p className="text-sm text-muted-foreground">Switch between light and dark themes</p>
-              </div>
-              <Switch />
             </div>
           </CardContent>
         </Card>

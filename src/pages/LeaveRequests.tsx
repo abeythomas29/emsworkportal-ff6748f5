@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Input } from '@/components/ui/input';
@@ -11,8 +11,8 @@ import {
   XCircle, 
   Calendar,
   Filter,
+  Loader2,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 import {
   Select,
@@ -21,122 +21,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-interface LeaveRequest {
-  id: string;
-  employeeId: string;
-  employeeName: string;
-  department: string;
-  type: string;
-  startDate: string;
-  endDate: string;
-  days: number;
-  reason: string;
-  status: 'pending' | 'approved' | 'rejected';
-  appliedOn: string;
-}
-
-const mockLeaveRequests: LeaveRequest[] = [
-  {
-    id: '1',
-    employeeId: 'EMP005',
-    employeeName: 'John Smith',
-    department: 'Engineering',
-    type: 'Casual Leave',
-    startDate: '2024-01-25',
-    endDate: '2024-01-26',
-    days: 2,
-    reason: 'Personal work - need to visit bank and complete some paperwork',
-    status: 'pending',
-    appliedOn: '2024-01-20',
-  },
-  {
-    id: '2',
-    employeeId: 'EMP008',
-    employeeName: 'Emma Wilson',
-    department: 'Marketing',
-    type: 'Sick Leave',
-    startDate: '2024-01-22',
-    endDate: '2024-01-22',
-    days: 1,
-    reason: 'Not feeling well, need rest',
-    status: 'pending',
-    appliedOn: '2024-01-22',
-  },
-  {
-    id: '3',
-    employeeId: 'EMP012',
-    employeeName: 'Michael Brown',
-    department: 'Sales',
-    type: 'Earned Leave',
-    startDate: '2024-02-01',
-    endDate: '2024-02-05',
-    days: 5,
-    reason: 'Family vacation planned for a long time',
-    status: 'pending',
-    appliedOn: '2024-01-18',
-  },
-  {
-    id: '4',
-    employeeId: 'EMP015',
-    employeeName: 'Sarah Johnson',
-    department: 'HR',
-    type: 'Casual Leave',
-    startDate: '2024-01-15',
-    endDate: '2024-01-15',
-    days: 1,
-    reason: 'Doctors appointment',
-    status: 'approved',
-    appliedOn: '2024-01-12',
-  },
-  {
-    id: '5',
-    employeeId: 'EMP020',
-    employeeName: 'David Lee',
-    department: 'Operations',
-    type: 'Sick Leave',
-    startDate: '2024-01-10',
-    endDate: '2024-01-11',
-    days: 2,
-    reason: 'Fever and cold',
-    status: 'approved',
-    appliedOn: '2024-01-10',
-  },
-];
+import { useLeave } from '@/hooks/useLeave';
 
 export default function LeaveRequestsPage() {
-  const { user } = useAuth();
-  const [requests, setRequests] = useState<LeaveRequest[]>(mockLeaveRequests);
+  const { role } = useAuth();
+  const { allLeaveRequests, isLoading, approveLeave, rejectLeave } = useLeave();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Only admin and manager can access this
-  if (user?.role !== 'admin' && user?.role !== 'manager') {
+  if (role !== 'admin' && role !== 'manager') {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleApprove = (id: string) => {
-    setRequests(requests.map(req => 
-      req.id === id ? { ...req, status: 'approved' as const } : req
-    ));
-    toast.success('Leave request approved');
-  };
-
-  const handleReject = (id: string) => {
-    setRequests(requests.map(req => 
-      req.id === id ? { ...req, status: 'rejected' as const } : req
-    ));
-    toast.error('Leave request rejected');
-  };
-
-  const filteredRequests = requests.filter(req => {
-    const matchesSearch = req.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          req.department.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredRequests = allLeaveRequests.filter(req => {
+    const employeeName = req.profiles?.full_name || '';
+    const department = req.profiles?.department || '';
+    const matchesSearch = employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          department.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const pendingCount = requests.filter(r => r.status === 'pending').length;
+  const pendingCount = allLeaveRequests.filter(r => r.status === 'pending').length;
+
+  const getLeaveTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      casual: 'Casual Leave',
+      sick: 'Sick Leave',
+      earned: 'Earned Leave',
+      lwp: 'Leave Without Pay',
+    };
+    return labels[type] || type;
+  };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -190,32 +117,43 @@ export default function LeaveRequestsPage() {
                 <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">
-                      {request.employeeName.charAt(0)}
+                      {request.profiles?.full_name?.charAt(0) || 'U'}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-3 flex-wrap">
-                        <h3 className="font-semibold text-foreground">{request.employeeName}</h3>
-                        <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
-                          {request.employeeId}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{request.department}</span>
+                        <h3 className="font-semibold text-foreground">
+                          {request.profiles?.full_name || 'Unknown Employee'}
+                        </h3>
+                        {request.profiles?.employee_id && (
+                          <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                            {request.profiles.employee_id}
+                          </span>
+                        )}
+                        {request.profiles?.department && (
+                          <span className="text-xs text-muted-foreground">
+                            {request.profiles.department}
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="font-medium text-sm">{request.type}</span>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <span className="font-medium text-sm">{getLeaveTypeLabel(request.leave_type)}</span>
                         <span className="text-muted-foreground">•</span>
                         <span className="text-sm text-muted-foreground flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {new Date(request.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          {request.startDate !== request.endDate && (
-                            <> - {new Date(request.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
+                          {new Date(request.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          {request.start_date !== request.end_date && (
+                            <> - {new Date(request.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
                           )}
                         </span>
                         <span className="text-muted-foreground">•</span>
-                        <span className="text-sm font-medium text-primary">{request.days} day{request.days > 1 ? 's' : ''}</span>
+                        <span className="text-sm font-medium text-primary">
+                          {request.days} day{Number(request.days) !== 1 ? 's' : ''}
+                          {request.is_half_day && ' (Half Day)'}
+                        </span>
                       </div>
                       <p className="text-sm text-muted-foreground mt-2">{request.reason}</p>
                       <p className="text-xs text-muted-foreground mt-2">
-                        Applied on {new Date(request.appliedOn).toLocaleDateString()}
+                        Applied on {new Date(request.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -227,7 +165,7 @@ export default function LeaveRequestsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleApprove(request.id)}
+                          onClick={() => approveLeave(request.id)}
                           className="text-success border-success hover:bg-success hover:text-success-foreground"
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
@@ -236,7 +174,7 @@ export default function LeaveRequestsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleReject(request.id)}
+                          onClick={() => rejectLeave(request.id)}
                           className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
                         >
                           <XCircle className="w-4 h-4 mr-1" />

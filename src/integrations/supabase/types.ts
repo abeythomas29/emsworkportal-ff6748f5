@@ -53,6 +53,87 @@ export type Database = {
         }
         Relationships: []
       }
+      leave_balances: {
+        Row: {
+          casual_leave: number
+          created_at: string
+          earned_leave: number
+          id: string
+          lwp_taken: number
+          sick_leave: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          casual_leave?: number
+          created_at?: string
+          earned_leave?: number
+          id?: string
+          lwp_taken?: number
+          sick_leave?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          casual_leave?: number
+          created_at?: string
+          earned_leave?: number
+          id?: string
+          lwp_taken?: number
+          sick_leave?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      leave_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          days: number
+          end_date: string
+          id: string
+          is_half_day: boolean
+          leave_type: string
+          reason: string
+          start_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          days?: number
+          end_date: string
+          id?: string
+          is_half_day?: boolean
+          leave_type: string
+          reason: string
+          start_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          days?: number
+          end_date?: string
+          id?: string
+          is_half_day?: boolean
+          leave_type?: string
+          reason?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

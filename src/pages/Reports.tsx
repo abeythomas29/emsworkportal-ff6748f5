@@ -9,6 +9,7 @@ import {
   Clock,
   Users,
   TrendingUp,
+  Loader2,
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import {
@@ -18,12 +19,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useLeave } from '@/hooks/useLeave';
 
 export default function ReportsPage() {
-  const { user } = useAuth();
+  const { role } = useAuth();
+  const { employees, isLoading: employeesLoading } = useEmployees();
+  const { allLeaveRequests, isLoading: leaveLoading } = useLeave();
 
   // Only admin and manager can access this
-  if (user?.role !== 'admin' && user?.role !== 'manager') {
+  if (role !== 'admin' && role !== 'manager') {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -33,6 +38,23 @@ export default function ReportsPage() {
     { icon: <Users className="w-8 h-8" />, title: 'Leave Report', desc: 'Leave utilization & balances', color: 'bg-info/10 text-info' },
     { icon: <TrendingUp className="w-8 h-8" />, title: 'Performance Report', desc: 'Department-wise analytics', color: 'bg-success/10 text-success' },
   ];
+
+  const isLoading = employeesLoading || leaveLoading;
+
+  // Calculate real stats
+  const approvedLeaves = allLeaveRequests.filter(r => r.status === 'approved');
+  const totalLeaveDays = approvedLeaves.reduce((sum, r) => sum + Number(r.days), 0);
+  const lwpDays = approvedLeaves.filter(r => r.leave_type === 'lwp').reduce((sum, r) => sum + Number(r.days), 0);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -49,9 +71,9 @@ export default function ReportsPage() {
                 <SelectValue placeholder="Select Month" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="january">January 2024</SelectItem>
-                <SelectItem value="december">December 2023</SelectItem>
-                <SelectItem value="november">November 2023</SelectItem>
+                <SelectItem value="january">January 2026</SelectItem>
+                <SelectItem value="december">December 2025</SelectItem>
+                <SelectItem value="november">November 2025</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -91,25 +113,25 @@ export default function ReportsPage() {
           <CardHeader>
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <BarChart3 className="w-5 h-5" />
-              Monthly Overview - January 2024
+              Overview
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="text-center p-4 rounded-lg bg-muted/50">
-                <p className="text-3xl font-bold text-primary">95.2%</p>
-                <p className="text-sm text-muted-foreground">Avg. Attendance</p>
+                <p className="text-3xl font-bold text-primary">{employees.length}</p>
+                <p className="text-sm text-muted-foreground">Total Employees</p>
               </div>
               <div className="text-center p-4 rounded-lg bg-muted/50">
-                <p className="text-3xl font-bold text-secondary">3,840</p>
-                <p className="text-sm text-muted-foreground">Total Hours Logged</p>
+                <p className="text-3xl font-bold text-secondary">{allLeaveRequests.length}</p>
+                <p className="text-sm text-muted-foreground">Leave Requests</p>
               </div>
               <div className="text-center p-4 rounded-lg bg-muted/50">
-                <p className="text-3xl font-bold text-info">45</p>
-                <p className="text-sm text-muted-foreground">Leaves Taken</p>
+                <p className="text-3xl font-bold text-info">{totalLeaveDays}</p>
+                <p className="text-sm text-muted-foreground">Leave Days Taken</p>
               </div>
               <div className="text-center p-4 rounded-lg bg-muted/50">
-                <p className="text-3xl font-bold text-destructive">8</p>
+                <p className="text-3xl font-bold text-destructive">{lwpDays}</p>
                 <p className="text-sm text-muted-foreground">LWP Days</p>
               </div>
             </div>
