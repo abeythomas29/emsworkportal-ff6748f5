@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AttendanceCalendar } from '@/components/attendance/AttendanceCalendar';
+import { EditLeaveBalanceDialog } from '@/components/employees/EditLeaveBalanceDialog';
 import {
   ArrowLeft,
   Mail,
@@ -18,6 +19,8 @@ import {
   Loader2,
   User,
   CalendarDays,
+  Wallet,
+  Pencil,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -54,6 +57,15 @@ interface LeaveRequest {
   created_at: string;
 }
 
+interface LeaveBalance {
+  id: string;
+  user_id: string;
+  casual_leave: number;
+  sick_leave: number;
+  earned_leave: number;
+  lwp_taken: number;
+}
+
 export default function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { role } = useAuth();
@@ -61,7 +73,9 @@ export default function EmployeeDetailPage() {
   const [profile, setProfile] = useState<EmployeeProfile | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [leaveBalance, setLeaveBalance] = useState<LeaveBalance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Only admin and manager can access
   if (role !== 'admin' && role !== 'manager') {
@@ -108,11 +122,30 @@ export default function EmployeeDetailPage() {
 
       setLeaveRequests((leaveData || []) as LeaveRequest[]);
 
+      // Fetch leave balance
+      const { data: balanceData } = await supabase
+        .from('leave_balances')
+        .select('*')
+        .eq('user_id', id)
+        .maybeSingle();
+
+      setLeaveBalance(balanceData as LeaveBalance | null);
+
       setIsLoading(false);
     };
 
     fetchData();
   }, [id]);
+
+  const refetchLeaveBalance = async () => {
+    if (!id) return;
+    const { data } = await supabase
+      .from('leave_balances')
+      .select('*')
+      .eq('user_id', id)
+      .maybeSingle();
+    setLeaveBalance(data as LeaveBalance | null);
+  };
 
   if (isLoading) {
     return (
@@ -202,6 +235,10 @@ export default function EmployeeDetailPage() {
             <TabsTrigger value="leave" className="gap-2">
               <CalendarDays className="w-4 h-4" />
               Leave Requests
+            </TabsTrigger>
+            <TabsTrigger value="balance" className="gap-2">
+              <Wallet className="w-4 h-4" />
+              Leave Balance
             </TabsTrigger>
           </TabsList>
 
@@ -310,7 +347,58 @@ export default function EmployeeDetailPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="balance" className="mt-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg">Leave Balance</CardTitle>
+                {role === 'admin' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setIsEditDialogOpen(true)}
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Edit
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                {leaveBalance ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-lg bg-primary/10 text-center">
+                      <p className="text-2xl font-bold text-primary">{leaveBalance.casual_leave}</p>
+                      <p className="text-sm text-muted-foreground">Casual Leave</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-blue-500/10 text-center">
+                      <p className="text-2xl font-bold text-blue-500">{leaveBalance.sick_leave}</p>
+                      <p className="text-sm text-muted-foreground">Sick Leave</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-green-500/10 text-center">
+                      <p className="text-2xl font-bold text-green-500">{leaveBalance.earned_leave}</p>
+                      <p className="text-sm text-muted-foreground">Earned Leave</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-orange-500/10 text-center">
+                      <p className="text-2xl font-bold text-orange-500">{leaveBalance.lwp_taken}</p>
+                      <p className="text-sm text-muted-foreground">LWP Taken</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-6">No leave balance found</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
+
+        <EditLeaveBalanceDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          leaveBalance={leaveBalance}
+          employeeName={profile.full_name}
+          onSuccess={refetchLeaveBalance}
+        />
       </div>
     </DashboardLayout>
   );
