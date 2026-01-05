@@ -97,71 +97,95 @@ export default function DashboardPage() {
         {/* Admin Stats */}
         {isAdmin && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard
-              title="Total Employees"
-              value={employees.length}
-              subtitle="Registered users"
-              icon={<Users className="w-6 h-6 text-primary" />}
-              variant="primary"
-            />
-            <StatCard
-              title="Pending Leaves"
-              value={pendingLeaveRequests.length}
-              subtitle="Awaiting approval"
-              icon={<Calendar className="w-6 h-6 text-warning" />}
-              variant="warning"
-            />
-            <StatCard
-              title="Days Worked"
-              value={daysWorkedThisMonth}
-              subtitle="This month (you)"
-              icon={<CheckCircle2 className="w-6 h-6 text-success" />}
-              variant="success"
-            />
-            <StatCard
-              title="Hours Logged"
-              value={totalHoursThisMonth.toFixed(1)}
-              subtitle="This month (you)"
-              icon={<Clock className="w-6 h-6 text-info" />}
-              variant="default"
-            />
+            <Link to="/employees" className="block">
+              <StatCard
+                title="Total Employees"
+                value={employees.length}
+                subtitle="Registered users"
+                icon={<Users className="w-6 h-6 text-primary" />}
+                variant="primary"
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+              />
+            </Link>
+            <Link to="/leave-requests" className="block">
+              <StatCard
+                title="Pending Leaves"
+                value={pendingLeaveRequests.length}
+                subtitle="Awaiting approval"
+                icon={<Calendar className="w-6 h-6 text-warning" />}
+                variant="warning"
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+              />
+            </Link>
+            <Link to="/attendance" className="block">
+              <StatCard
+                title="Days Worked"
+                value={daysWorkedThisMonth}
+                subtitle="This month (you)"
+                icon={<CheckCircle2 className="w-6 h-6 text-success" />}
+                variant="success"
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+              />
+            </Link>
+            <Link to="/work-hours" className="block">
+              <StatCard
+                title="Hours Logged"
+                value={totalHoursThisMonth.toFixed(1)}
+                subtitle="This month (you)"
+                icon={<Clock className="w-6 h-6 text-info" />}
+                variant="default"
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+              />
+            </Link>
           </div>
         )}
 
         {/* Employee Stats */}
         {!isAdmin && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard
-              title="Days Worked"
-              value={daysWorkedThisMonth}
-              subtitle="This month"
-              icon={<CheckCircle2 className="w-6 h-6 text-success" />}
-              variant="primary"
-            />
-            <StatCard
-              title="Leave Balance"
-              value={leaveBalance ? (leaveBalance.casual_leave + leaveBalance.sick_leave + leaveBalance.earned_leave) : 37}
-              subtitle="Days remaining"
-              icon={<Calendar className="w-6 h-6 text-info" />}
-              variant="secondary"
-            />
-            {user?.employeeType === 'online' && (
+            <Link to="/attendance" className="block">
               <StatCard
-                title="Hours Logged"
-                value={totalHoursThisMonth.toFixed(1)}
+                title="Days Worked"
+                value={daysWorkedThisMonth}
                 subtitle="This month"
-                icon={<Clock className="w-6 h-6 text-primary" />}
-                variant="default"
+                icon={<CheckCircle2 className="w-6 h-6 text-success" />}
+                variant="primary"
+                className="cursor-pointer hover:shadow-lg transition-shadow"
               />
+            </Link>
+            <Link to="/leave" className="block">
+              <StatCard
+                title="Leave Balance"
+                value={leaveBalance ? (leaveBalance.casual_leave + leaveBalance.sick_leave + leaveBalance.earned_leave) : 37}
+                subtitle="Days remaining"
+                icon={<Calendar className="w-6 h-6 text-info" />}
+                variant="secondary"
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+              />
+            </Link>
+            {user?.employeeType === 'online' && (
+              <Link to="/work-hours" className="block">
+                <StatCard
+                  title="Hours Logged"
+                  value={totalHoursThisMonth.toFixed(1)}
+                  subtitle="This month"
+                  icon={<Clock className="w-6 h-6 text-primary" />}
+                  variant="default"
+                  className="cursor-pointer hover:shadow-lg transition-shadow"
+                />
+              </Link>
             )}
-            <StatCard
-              title="Attendance Rate"
-              value={`${daysWorkedThisMonth > 0 ? Math.round((daysWorkedThisMonth / 22) * 100) : 0}%`}
-              subtitle="This month"
-              icon={<TrendingUp className="w-6 h-6 text-success" />}
-              trend={{ value: 2.5, isPositive: true }}
-              variant="success"
-            />
+            <Link to="/attendance" className="block">
+              <StatCard
+                title="Attendance Rate"
+                value={`${daysWorkedThisMonth > 0 ? Math.round((daysWorkedThisMonth / 22) * 100) : 0}%`}
+                subtitle="This month"
+                icon={<TrendingUp className="w-6 h-6 text-success" />}
+                trend={{ value: 2.5, isPositive: true }}
+                variant="success"
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+              />
+            </Link>
           </div>
         )}
 
