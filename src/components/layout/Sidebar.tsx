@@ -1,0 +1,142 @@
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import emsLogo from '@/assets/ems-logo.png';
+import {
+  LayoutDashboard,
+  Calendar,
+  Clock,
+  FileText,
+  Users,
+  Settings,
+  LogOut,
+  ClipboardList,
+  BarChart3,
+  CalendarCheck,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface NavItem {
+  icon: React.ReactNode;
+  label: string;
+  path: string;
+  roles: string[];
+}
+
+const navItems: NavItem[] = [
+  {
+    icon: <LayoutDashboard size={20} />,
+    label: 'Dashboard',
+    path: '/dashboard',
+    roles: ['admin', 'manager', 'employee_online', 'employee_offline'],
+  },
+  {
+    icon: <Calendar size={20} />,
+    label: 'Attendance',
+    path: '/attendance',
+    roles: ['admin', 'manager', 'employee_online', 'employee_offline'],
+  },
+  {
+    icon: <Clock size={20} />,
+    label: 'Work Hours',
+    path: '/work-hours',
+    roles: ['admin', 'manager', 'employee_online'],
+  },
+  {
+    icon: <CalendarCheck size={20} />,
+    label: 'Leave Management',
+    path: '/leave',
+    roles: ['admin', 'manager', 'employee_online', 'employee_offline'],
+  },
+  {
+    icon: <ClipboardList size={20} />,
+    label: 'Leave Requests',
+    path: '/leave-requests',
+    roles: ['admin', 'manager'],
+  },
+  {
+    icon: <Users size={20} />,
+    label: 'Employees',
+    path: '/employees',
+    roles: ['admin', 'manager'],
+  },
+  {
+    icon: <BarChart3 size={20} />,
+    label: 'Reports',
+    path: '/reports',
+    roles: ['admin', 'manager'],
+  },
+  {
+    icon: <FileText size={20} />,
+    label: 'Policies',
+    path: '/policies',
+    roles: ['admin'],
+  },
+  {
+    icon: <Settings size={20} />,
+    label: 'Settings',
+    path: '/settings',
+    roles: ['admin', 'manager', 'employee_online', 'employee_offline'],
+  },
+];
+
+export function Sidebar() {
+  const location = useLocation();
+  const { user, logout } = useAuth();
+
+  const filteredItems = navItems.filter(
+    item => user && item.roles.includes(user.role)
+  );
+
+  return (
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar flex flex-col">
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
+        <img src={emsLogo} alt="EMS Logo" className="h-10 w-auto" />
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        {filteredItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                'nav-item',
+                isActive && 'nav-item-active'
+              )}
+            >
+              {item.icon}
+              <span className="font-medium">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User Profile & Logout */}
+      <div className="border-t border-sidebar-border p-4">
+        <div className="flex items-center gap-3 mb-4 px-2">
+          <div className="w-10 h-10 rounded-full bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-semibold">
+            {user?.name.charAt(0)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-sidebar-foreground truncate">
+              {user?.name}
+            </p>
+            <p className="text-xs text-sidebar-foreground/60 capitalize">
+              {user?.role.replace('_', ' ')}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={logout}
+          className="nav-item w-full hover:bg-destructive/20 hover:text-destructive"
+        >
+          <LogOut size={20} />
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+  );
+}
