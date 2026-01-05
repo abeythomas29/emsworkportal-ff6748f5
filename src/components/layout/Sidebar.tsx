@@ -12,8 +12,12 @@ import {
   ClipboardList,
   BarChart3,
   CalendarCheck,
+  Menu,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface NavItem {
   icon: React.ReactNode;
@@ -84,6 +88,23 @@ const navItems: NavItem[] = [
 export function Sidebar() {
   const location = useLocation();
   const { user, role, logout } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
+
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const filteredItems = navItems.filter((item) => {
     // Check role
@@ -103,55 +124,82 @@ export function Sidebar() {
   });
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar flex flex-col">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-        <img src={emsLogo} alt="EMS Logo" className="h-10 w-auto" />
-      </div>
+    <>
+      {/* Mobile Menu Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed top-4 left-4 z-50 lg:hidden"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </Button>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-        {filteredItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                'nav-item',
-                isActive && 'nav-item-active'
-              )}
-            >
-              {item.icon}
-              <span className="font-medium">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
-      {/* User Profile & Logout */}
-      <div className="border-t border-sidebar-border p-4">
-        <div className="flex items-center gap-3 mb-4 px-2">
-          <div className="w-10 h-10 rounded-full bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-semibold">
-            {user?.name?.charAt(0) || 'U'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">
-              {user?.name || 'User'}
-            </p>
-            <p className="text-xs text-sidebar-foreground/60 capitalize">
-              {role || 'Employee'}
-            </p>
-          </div>
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar flex flex-col transition-transform duration-300 ease-in-out',
+          'lg:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        {/* Logo */}
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
+          <img src={emsLogo} alt="EMS Logo" className="h-10 w-auto" />
         </div>
-        <button
-          onClick={logout}
-          className="nav-item w-full hover:bg-destructive/20 hover:text-destructive"
-        >
-          <LogOut size={20} />
-          <span>Sign Out</span>
-        </button>
-      </div>
-    </aside>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+          {filteredItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  'nav-item',
+                  isActive && 'nav-item-active'
+                )}
+              >
+                {item.icon}
+                <span className="font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User Profile & Logout */}
+        <div className="border-t border-sidebar-border p-4">
+          <div className="flex items-center gap-3 mb-4 px-2">
+            <div className="w-10 h-10 rounded-full bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-semibold">
+              {user?.name?.charAt(0) || 'U'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-sidebar-foreground truncate">
+                {user?.name || 'User'}
+              </p>
+              <p className="text-xs text-sidebar-foreground/60 capitalize">
+                {role || 'Employee'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={logout}
+            className="nav-item w-full hover:bg-destructive/20 hover:text-destructive"
+          >
+            <LogOut size={20} />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
