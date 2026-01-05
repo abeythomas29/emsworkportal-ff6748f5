@@ -14,16 +14,172 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attendance: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["attendance_status"]
+          total_hours: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["attendance_status"]
+          total_hours?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["attendance_status"]
+          total_hours?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          department: string | null
+          email: string
+          employee_id: string | null
+          employee_type: Database["public"]["Enums"]["employee_type"]
+          full_name: string
+          id: string
+          is_active: boolean | null
+          joining_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          department?: string | null
+          email: string
+          employee_id?: string | null
+          employee_type?: Database["public"]["Enums"]["employee_type"]
+          full_name: string
+          id: string
+          is_active?: boolean | null
+          joining_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string
+          employee_id?: string | null
+          employee_type?: Database["public"]["Enums"]["employee_type"]
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          joining_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      work_hours: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          start_time: string
+          status: string | null
+          task_description: string
+          total_hours: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          end_time: string
+          id?: string
+          start_time: string
+          status?: string | null
+          task_description: string
+          total_hours?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          start_time?: string
+          status?: string | null
+          task_description?: string
+          total_hours?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "manager" | "employee"
+      attendance_status:
+        | "present"
+        | "absent"
+        | "half_day"
+        | "leave"
+        | "lwp"
+        | "holiday"
+        | "weekend"
+      employee_type: "online" | "offline"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +306,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "manager", "employee"],
+      attendance_status: [
+        "present",
+        "absent",
+        "half_day",
+        "leave",
+        "lwp",
+        "holiday",
+        "weekend",
+      ],
+      employee_type: ["online", "offline"],
+    },
   },
 } as const

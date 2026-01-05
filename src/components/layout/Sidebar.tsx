@@ -20,6 +20,7 @@ interface NavItem {
   label: string;
   path: string;
   roles: string[];
+  employeeTypes?: string[];
 }
 
 const navItems: NavItem[] = [
@@ -27,25 +28,26 @@ const navItems: NavItem[] = [
     icon: <LayoutDashboard size={20} />,
     label: 'Dashboard',
     path: '/dashboard',
-    roles: ['admin', 'manager', 'employee_online', 'employee_offline'],
+    roles: ['admin', 'manager', 'employee'],
   },
   {
     icon: <Calendar size={20} />,
     label: 'Attendance',
     path: '/attendance',
-    roles: ['admin', 'manager', 'employee_online', 'employee_offline'],
+    roles: ['admin', 'manager', 'employee'],
   },
   {
     icon: <Clock size={20} />,
     label: 'Work Hours',
     path: '/work-hours',
-    roles: ['admin', 'manager', 'employee_online'],
+    roles: ['admin', 'manager', 'employee'],
+    employeeTypes: ['online'],
   },
   {
     icon: <CalendarCheck size={20} />,
     label: 'Leave Management',
     path: '/leave',
-    roles: ['admin', 'manager', 'employee_online', 'employee_offline'],
+    roles: ['admin', 'manager', 'employee'],
   },
   {
     icon: <ClipboardList size={20} />,
@@ -75,17 +77,30 @@ const navItems: NavItem[] = [
     icon: <Settings size={20} />,
     label: 'Settings',
     path: '/settings',
-    roles: ['admin', 'manager', 'employee_online', 'employee_offline'],
+    roles: ['admin', 'manager', 'employee'],
   },
 ];
 
 export function Sidebar() {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, role, logout } = useAuth();
 
-  const filteredItems = navItems.filter(
-    item => user && item.roles.includes(user.role)
-  );
+  const filteredItems = navItems.filter((item) => {
+    // Check role
+    if (!role || !item.roles.includes(role)) return false;
+    
+    // Check employee type if specified
+    if (item.employeeTypes && user?.employeeType) {
+      if (!item.employeeTypes.includes(user.employeeType)) return false;
+    }
+    
+    // For admins/managers, show work hours even if they're not "online" type
+    if (item.path === '/work-hours' && (role === 'admin' || role === 'manager')) {
+      return true;
+    }
+    
+    return true;
+  });
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar flex flex-col">
@@ -118,14 +133,14 @@ export function Sidebar() {
       <div className="border-t border-sidebar-border p-4">
         <div className="flex items-center gap-3 mb-4 px-2">
           <div className="w-10 h-10 rounded-full bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-semibold">
-            {user?.name.charAt(0)}
+            {user?.name?.charAt(0) || 'U'}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-sidebar-foreground truncate">
-              {user?.name}
+              {user?.name || 'User'}
             </p>
             <p className="text-xs text-sidebar-foreground/60 capitalize">
-              {user?.role.replace('_', ' ')}
+              {role || 'Employee'}
             </p>
           </div>
         </div>
