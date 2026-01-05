@@ -1,0 +1,230 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+
+export interface LeaveBalance {
+  id: string;
+  user_id: string;
+  casual_leave: number;
+  sick_leave: number;
+  earned_leave: number;
+  lwp_taken: number;
+}
+
+export interface LeaveRequest {
+  id: string;
+  user_id: string;
+  leave_type: 'casual' | 'sick' | 'earned' | 'lwp';
+  start_date: string;
+  end_date: string;
+  is_half_day: boolean;
+  days: number;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined data
+  profiles?: {
+    full_name: string;
+    employee_id: string | null;
+    department: string | null;
+  };
+}
+
+export function useLeave() {
+  const { user } = useAuth();
+  const [leaveBalance, setLeaveBalance] = useState<LeaveBalance | null>(null);
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [allLeaveRequests, setAllLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchLeaveBalance = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('leave_balances')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching leave balance:', error);
+      return;
+    }
+
+    setLeaveBalance(data);
+  };
+
+  const fetchLeaveRequests = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('leave_requests')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching leave requests:', error);
+      return;
+    }
+
+    setLeaveRequests((data || []) as LeaveRequest[]);
+  };
+
+  const fetchAllLeaveRequests = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('leave_requests')
+      .select(`
+        *,
+        profiles:user_id (
+          full_name,
+          employee_id,
+          department
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching all leave requests:', error);
+      return;
+    }
+
+    setAllLeaveRequests((data || []) as unknown as LeaveRequest[]);
+  };
+
+  const applyLeave = async (data: {
+    leaveType: string;
+    startDate: string;
+    endDate: string;
+    isHalfDay: boolean;
+    reason: string;
+  }) => {
+    if (!user) return { error: 'Not authenticated' };
+
+    // Calculate days
+    const start = new Date(data.startDate);
+    const end = data.endDate ? new Date(data.endDate) : start;
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    const days = data.isHalfDay ? 0.5 : diffDays;
+
+    const { error } = await supabase.from('leave_requests').insert({
+      user_id: user.id,
+      leave_type: data.leaveType,
+      start_date: data.startDate,
+      end_date: data.endDate || data.startDate,
+      is_half_day: data.isHalfDay,
+      days: days,
+      reason: data.reason,
+    });
+
+    if (error) {
+      console.error('Error applying leave:', error);
+      toast.error('Failed to apply for leave');
+      return { error: error.message };
+    }
+
+    toast.success('Leave application submitted!');
+    fetchLeaveRequests();
+    return { error: null };
+  };
+
+  const approveLeave = async (requestId: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('leave_requests')
+      .update({
+        status: 'approved',
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+      })
+      .eq('id', requestId);
+
+    if (error) {
+      console.error('Error approving leave:', error);
+      toast.error('Failed to approve leave');
+      return;
+    }
+
+    toast.success('Leave request approved');
+    fetchAllLeaveRequests();
+  };
+
+  const rejectLeave = async (requestId: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('leave_requests')
+      .update({
+        status: 'rejected',
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+      })
+      .eq('id', requestId);
+
+    if (error) {
+      console.error('Error rejecting leave:', error);
+      toast.error('Failed to reject leave');
+      return;
+    }
+
+    toast.error('Leave request rejected');
+    fetchAllLeaveRequests();
+  };
+
+  useEffect(() => {
+    if (user) {
+      setIsLoading(true);
+      Promise.all([fetchLeaveBalance(), fetchLeaveRequests(), fetchAllLeaveRequests()]).finally(
+        () => setIsLoading(false)
+      );
+    }
+  }, [user]);
+
+  // Setup realtime subscription
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('leave-requests-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'leave_requests',
+        },
+        () => {
+          fetchLeaveRequests();
+          fetchAllLeaveRequests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  return {
+    leaveBalance,
+    leaveRequests,
+    allLeaveRequests,
+    isLoading,
+    applyLeave,
+    approveLeave,
+    rejectLeave,
+    refetch: () => {
+      fetchLeaveBalance();
+      fetchLeaveRequests();
+      fetchAllLeaveRequests();
+    },
+  };
+}
