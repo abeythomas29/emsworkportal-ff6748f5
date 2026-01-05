@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AttendanceCalendar } from '@/components/attendance/AttendanceCalendar';
 import {
   ArrowLeft,
   Mail,
@@ -84,15 +85,15 @@ export default function EmployeeDetailPage() {
         setProfile(profileData as EmployeeProfile);
       }
 
-      // Fetch attendance (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      // Fetch attendance (last 90 days for calendar view)
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
       const { data: attendanceData } = await supabase
         .from('attendance')
         .select('*')
         .eq('user_id', id)
-        .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
+        .gte('date', ninetyDaysAgo.toISOString().split('T')[0])
         .order('date', { ascending: false });
 
       setAttendance((attendanceData || []) as AttendanceRecord[]);
@@ -205,54 +206,67 @@ export default function EmployeeDetailPage() {
           </TabsList>
 
           <TabsContent value="attendance" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Recent Attendance (Last 30 Days)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {attendance.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-6">No attendance records found</p>
-                ) : (
-                  <div className="space-y-3">
-                    {attendance.map((record) => (
-                      <div
-                        key={record.id}
-                        className="flex items-center justify-between p-3 rounded-lg border border-border"
-                      >
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {format(new Date(record.date), 'EEEE, MMM dd, yyyy')}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {record.check_in
-                              ? `Check-in: ${format(new Date(record.check_in), 'hh:mm a')}`
-                              : 'No check-in'}
-                            {record.check_out &&
-                              ` | Check-out: ${format(new Date(record.check_out), 'hh:mm a')}`}
-                          </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Calendar View */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Attendance Calendar</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AttendanceCalendar attendance={attendance} />
+                </CardContent>
+              </Card>
+
+              {/* List View */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Recent Records</CardTitle>
+                </CardHeader>
+                <CardContent className="max-h-[500px] overflow-y-auto">
+                  {attendance.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-6">No attendance records found</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {attendance.slice(0, 30).map((record) => (
+                        <div
+                          key={record.id}
+                          className="flex items-center justify-between p-3 rounded-lg border border-border"
+                        >
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {format(new Date(record.date), 'EEEE, MMM dd, yyyy')}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {record.check_in
+                                ? `Check-in: ${format(new Date(record.check_in), 'hh:mm a')}`
+                                : 'No check-in'}
+                              {record.check_out &&
+                                ` | Check-out: ${format(new Date(record.check_out), 'hh:mm a')}`}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {record.total_hours && (
+                              <span className="text-sm text-muted-foreground">
+                                {record.total_hours.toFixed(1)}h
+                              </span>
+                            )}
+                            <StatusBadge
+                              status={
+                                record.status === 'present'
+                                  ? 'approved'
+                                  : record.status === 'absent'
+                                  ? 'rejected'
+                                  : 'pending'
+                              }
+                            />
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          {record.total_hours && (
-                            <span className="text-sm text-muted-foreground">
-                              {record.total_hours.toFixed(1)}h
-                            </span>
-                          )}
-                          <StatusBadge
-                            status={
-                              record.status === 'present'
-                                ? 'approved'
-                                : record.status === 'absent'
-                                ? 'rejected'
-                                : 'pending'
-                            }
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="leave" className="mt-4">
