@@ -169,7 +169,6 @@ export default function LeavePage() {
                       id="startDate"
                       type="date"
                       value={formData.startDate}
-                      min={new Date().toISOString().split('T')[0]}
                       onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                       required
                     />
@@ -180,11 +179,17 @@ export default function LeavePage() {
                       id="endDate"
                       type="date"
                       value={formData.endDate}
-                      min={formData.startDate || new Date().toISOString().split('T')[0]}
+                      min={formData.startDate}
                       onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                     />
                   </div>
                 </div>
+                {formData.startDate && new Date(formData.startDate) < new Date(new Date().toDateString()) && (
+                  <p className="text-xs text-warning flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    This is a back-dated leave request
+                  </p>
+                )}
 
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -279,46 +284,56 @@ export default function LeavePage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {leaveRequests.map((leave) => (
-                  <div
-                    key={leave.id}
-                    className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg bg-muted/50 gap-4"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 rounded-lg bg-primary/10">
-                        <Calendar className="w-5 h-5 text-primary" />
+                {leaveRequests.map((leave) => {
+                  const isBackDated = new Date(leave.start_date) < new Date(leave.created_at.split('T')[0]);
+                  return (
+                    <div
+                      key={leave.id}
+                      className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg bg-muted/50 gap-4 ${isBackDated ? 'border-l-4 border-warning' : ''}`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 rounded-lg bg-primary/10">
+                          <Calendar className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-foreground">{getLeaveTypeLabel(leave.leave_type)}</p>
+                            {isBackDated && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-warning/10 text-warning">
+                                Back-dated
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(leave.start_date).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                            {leave.end_date !== leave.start_date && (
+                              <>
+                                {' - '}
+                                {new Date(leave.end_date).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </>
+                            )}
+                            {' • '}{leave.days} day{Number(leave.days) !== 1 ? 's' : ''}
+                            {leave.is_half_day && ' (Half Day)'}
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">{leave.reason}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">{getLeaveTypeLabel(leave.leave_type)}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(leave.start_date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                          {leave.end_date !== leave.start_date && (
-                            <>
-                              {' - '}
-                              {new Date(leave.end_date).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </>
-                          )}
-                          {' • '}{leave.days} day{Number(leave.days) !== 1 ? 's' : ''}
-                          {leave.is_half_day && ' (Half Day)'}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1">{leave.reason}</p>
+                      <div className="flex items-center gap-4 md:flex-col md:items-end">
+                        <StatusBadge status={leave.status} />
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Applied: {new Date(leave.created_at).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 md:flex-col md:items-end">
-                      <StatusBadge status={leave.status} />
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        Applied: {new Date(leave.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
