@@ -12,6 +12,7 @@ import {
   Calendar,
   Filter,
   Loader2,
+  History,
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import {
@@ -111,82 +112,94 @@ export default function LeaveRequestsPage() {
 
         {/* Leave Requests List */}
         <div className="space-y-4">
-          {filteredRequests.map((request) => (
-            <Card key={request.id} className={request.status === 'pending' ? 'border-warning/30' : ''}>
-              <CardContent className="pt-6">
-                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">
-                      {request.profiles?.full_name?.charAt(0) || 'U'}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <h3 className="font-semibold text-foreground">
-                          {request.profiles?.full_name || 'Unknown Employee'}
-                        </h3>
-                        {request.profiles?.employee_id && (
-                          <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
-                            {request.profiles.employee_id}
-                          </span>
-                        )}
-                        {request.profiles?.department && (
-                          <span className="text-xs text-muted-foreground">
-                            {request.profiles.department}
-                          </span>
-                        )}
+          {filteredRequests.map((request) => {
+            const isBackDated = new Date(request.start_date) < new Date(request.created_at.split('T')[0]);
+            return (
+              <Card 
+                key={request.id} 
+                className={`${request.status === 'pending' ? 'border-warning/30' : ''} ${isBackDated ? 'border-l-4 border-l-warning' : ''}`}
+              >
+                <CardContent className="pt-6">
+                  <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">
+                        {request.profiles?.full_name?.charAt(0) || 'U'}
                       </div>
-                      <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        <span className="font-medium text-sm">{getLeaveTypeLabel(request.leave_type)}</span>
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(request.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          {request.start_date !== request.end_date && (
-                            <> - {new Date(request.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <h3 className="font-semibold text-foreground">
+                            {request.profiles?.full_name || 'Unknown Employee'}
+                          </h3>
+                          {request.profiles?.employee_id && (
+                            <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                              {request.profiles.employee_id}
+                            </span>
                           )}
-                        </span>
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-sm font-medium text-primary">
-                          {request.days} day{Number(request.days) !== 1 ? 's' : ''}
-                          {request.is_half_day && ' (Half Day)'}
-                        </span>
+                          {request.profiles?.department && (
+                            <span className="text-xs text-muted-foreground">
+                              {request.profiles.department}
+                            </span>
+                          )}
+                          {isBackDated && (
+                            <span className="text-xs px-2 py-0.5 rounded bg-warning/10 text-warning flex items-center gap-1">
+                              <History className="w-3 h-3" />
+                              Back-dated
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <span className="font-medium text-sm">{getLeaveTypeLabel(request.leave_type)}</span>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(request.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            {request.start_date !== request.end_date && (
+                              <> - {new Date(request.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
+                            )}
+                          </span>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-sm font-medium text-primary">
+                            {request.days} day{Number(request.days) !== 1 ? 's' : ''}
+                            {request.is_half_day && ' (Half Day)'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-2">{request.reason}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Applied on {new Date(request.created_at).toLocaleDateString()}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-2">{request.reason}</p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Applied on {new Date(request.created_at).toLocaleDateString()}
-                      </p>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <StatusBadge status={request.status} />
+                      {request.status === 'pending' && (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => approveLeave(request.id)}
+                            className="text-success border-success hover:bg-success hover:text-success-foreground"
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => rejectLeave(request.id)}
+                            className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          >
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <StatusBadge status={request.status} />
-                    {request.status === 'pending' && (
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => approveLeave(request.id)}
-                          className="text-success border-success hover:bg-success hover:text-success-foreground"
-                        >
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => rejectLeave(request.id)}
-                          className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                        >
-                          <XCircle className="w-4 h-4 mr-1" />
-                          Reject
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
 
           {filteredRequests.length === 0 && (
             <Card>
