@@ -13,6 +13,7 @@ import WorkHoursPage from "./pages/WorkHours";
 import LeavePage from "./pages/Leave";
 import LeaveRequestsPage from "./pages/LeaveRequests";
 import EmployeesPage from "./pages/Employees";
+import EmployeeDetailPage from "./pages/EmployeeDetail";
 import ReportsPage from "./pages/Reports";
 import PoliciesPage from "./pages/Policies";
 import SettingsPage from "./pages/Settings";
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/leave" element={<LeavePage />} />
             <Route path="/leave-requests" element={<LeaveRequestsPage />} />
             <Route path="/employees" element={<EmployeesPage />} />
+            <Route path="/employee/:id" element={<EmployeeDetailPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/policies" element={<PoliciesPage />} />
             <Route path="/settings" element={<SettingsPage />} />

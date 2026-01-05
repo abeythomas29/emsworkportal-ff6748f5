@@ -15,7 +15,7 @@ import {
   Loader2,
   Shield,
 } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import {
   Select,
   SelectContent,
@@ -35,6 +35,7 @@ import { AddEmployeeDialog } from '@/components/employees/AddEmployeeDialog';
 export default function EmployeesPage() {
   const { role } = useAuth();
   const { employees, isLoading, refetch } = useEmployees();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -166,8 +167,12 @@ export default function EmployeesPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Profile</DropdownMenuItem>
-                        <DropdownMenuItem>View Attendance</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/employee/${employee.id}`)}>
+                          View Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/employee/${employee.id}?tab=attendance`)}>
+                          View Attendance
+                        </DropdownMenuItem>
                         {role === 'admin' && (
                           <>
                             <DropdownMenuItem>Edit Details</DropdownMenuItem>
