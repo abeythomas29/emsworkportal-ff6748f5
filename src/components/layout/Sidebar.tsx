@@ -152,9 +152,9 @@ export function Sidebar() {
         )}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
+        <Link to="/dashboard" className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border hover:bg-sidebar-accent/50 transition-colors">
           <img src={emsLogo} alt="EMS Logo" className="h-10 w-auto" />
-        </div>
+        </Link>
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
