@@ -11,6 +11,7 @@ export interface Profile {
   employee_type: EmployeeType;
   joining_date: string | null;
   avatar_url: string | null;
+  phone_number: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
