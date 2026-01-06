@@ -15,6 +15,7 @@ import LeaveRequestsPage from "./pages/LeaveRequests";
 import EmployeesPage from "./pages/Employees";
 import EmployeeDetailPage from "./pages/EmployeeDetail";
 import ReportsPage from "./pages/Reports";
+import AttendanceReportPage from "./pages/AttendanceReport";
 import PoliciesPage from "./pages/Policies";
 import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/employees" element={<EmployeesPage />} />
             <Route path="/employee/:id" element={<EmployeeDetailPage />} />
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/attendance-report" element={<AttendanceReportPage />} />
             <Route path="/policies" element={<PoliciesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

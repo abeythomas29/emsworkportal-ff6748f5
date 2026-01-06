@@ -327,6 +327,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_absent_for_missing_checkins: {
+        Args: { target_date?: string }
+        Returns: number
+      }
     }
     Enums: {
       app_role: "admin" | "manager" | "employee"

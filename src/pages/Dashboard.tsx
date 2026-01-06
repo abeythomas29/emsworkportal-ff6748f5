@@ -27,6 +27,14 @@ export default function DashboardPage() {
 
   const isAdmin = role === 'admin' || role === 'manager';
 
+  // Dynamic greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   // Calculate stats from real attendance data
   const daysWorkedThisMonth = attendanceHistory.filter(
     (a) =>
@@ -73,7 +81,7 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Good morning, {user?.name?.split(' ')[0] || 'there'}!
+              {getGreeting()}, {user?.name?.split(' ')[0] || 'there'}!
             </h1>
             <p className="text-muted-foreground mt-1">
               Here's what's happening today,{' '}

@@ -192,14 +192,19 @@ export default function AttendancePage() {
                           key={day}
                           onClick={() => attendance && setSelectedDay(attendance)}
                           className={cn(
-                            'h-12 rounded-lg flex items-center justify-center text-sm font-medium transition-all relative',
+                            'h-16 rounded-lg flex flex-col items-center justify-center text-sm font-medium transition-all relative',
                             status && statusColors[status],
                             !status && 'bg-muted/30 text-muted-foreground',
                             attendance && 'hover:opacity-80 cursor-pointer',
                             isToday && 'ring-2 ring-primary ring-offset-2'
                           )}
                         >
-                          {day}
+                          <span>{day}</span>
+                          {attendance?.check_in && (
+                            <span className="text-[9px] opacity-80 mt-0.5">
+                              {format(new Date(attendance.check_in), 'h:mm a')}
+                            </span>
+                          )}
                         </button>
                       );
                     })}
