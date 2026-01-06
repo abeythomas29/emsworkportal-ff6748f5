@@ -10,8 +10,9 @@ import {
   Users,
   TrendingUp,
   Loader2,
+  ArrowRight,
 } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import {
   Select,
   SelectContent,
@@ -33,10 +34,10 @@ export default function ReportsPage() {
   }
 
   const reportTypes = [
-    { icon: <Calendar className="w-8 h-8" />, title: 'Attendance Report', desc: 'Daily/Monthly attendance summary', color: 'bg-primary/10 text-primary' },
-    { icon: <Clock className="w-8 h-8" />, title: 'Work Hours Report', desc: 'Employee work hours breakdown', color: 'bg-secondary/10 text-secondary' },
-    { icon: <Users className="w-8 h-8" />, title: 'Leave Report', desc: 'Leave utilization & balances', color: 'bg-info/10 text-info' },
-    { icon: <TrendingUp className="w-8 h-8" />, title: 'Performance Report', desc: 'Department-wise analytics', color: 'bg-success/10 text-success' },
+    { icon: <Calendar className="w-8 h-8" />, title: 'Attendance Report', desc: 'Daily/Monthly attendance summary', color: 'bg-primary/10 text-primary', link: '/attendance-report' },
+    { icon: <Clock className="w-8 h-8" />, title: 'Work Hours Report', desc: 'Employee work hours breakdown', color: 'bg-secondary/10 text-secondary', link: null },
+    { icon: <Users className="w-8 h-8" />, title: 'Leave Report', desc: 'Leave utilization & balances', color: 'bg-info/10 text-info', link: null },
+    { icon: <TrendingUp className="w-8 h-8" />, title: 'Performance Report', desc: 'Department-wise analytics', color: 'bg-success/10 text-success', link: null },
   ];
 
   const isLoading = employeesLoading || leaveLoading;
@@ -92,14 +93,25 @@ export default function ReportsPage() {
                     <h3 className="font-semibold text-lg text-foreground">{report.title}</h3>
                     <p className="text-sm text-muted-foreground mb-4">{report.desc}</p>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="gap-2">
-                        <Download className="w-4 h-4" />
-                        Excel
-                      </Button>
-                      <Button size="sm" variant="outline" className="gap-2">
-                        <Download className="w-4 h-4" />
-                        PDF
-                      </Button>
+                      {report.link ? (
+                        <Link to={report.link}>
+                          <Button size="sm" className="gap-2">
+                            View Report
+                            <ArrowRight className="w-4 h-4" />
+                          </Button>
+                        </Link>
+                      ) : (
+                        <>
+                          <Button size="sm" variant="outline" className="gap-2">
+                            <Download className="w-4 h-4" />
+                            Excel
+                          </Button>
+                          <Button size="sm" variant="outline" className="gap-2">
+                            <Download className="w-4 h-4" />
+                            PDF
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

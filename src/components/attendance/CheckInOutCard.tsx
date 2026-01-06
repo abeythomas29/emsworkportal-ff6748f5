@@ -54,6 +54,14 @@ export function CheckInOutCard() {
         </div>
       </CardHeader>
       <CardContent className="pt-6 space-y-6">
+        {/* Reminder */}
+        {!isCheckedIn && (
+          <div className="p-3 rounded-lg bg-warning/10 border border-warning/20 text-warning text-sm">
+            <p className="font-medium">Reminder</p>
+            <p className="text-xs opacity-80">Please check in when you arrive and check out when you leave.</p>
+          </div>
+        )}
+
         {/* Status Display */}
         <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
           <div className="flex items-center gap-3">
