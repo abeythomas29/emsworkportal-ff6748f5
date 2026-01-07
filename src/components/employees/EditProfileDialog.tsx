@@ -11,11 +11,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -23,10 +31,11 @@ interface EditProfileDialogProps {
   profile: {
     id: string;
     full_name: string;
-    phone_number: string | null;
+    phone_number?: string | null;
     department: string | null;
     employee_id: string | null;
     joining_date: string | null;
+    employee_type?: 'online' | 'offline';
   } | null;
   onSuccess: () => void;
 }
@@ -37,11 +46,13 @@ export function EditProfileDialog({
   profile,
   onSuccess,
 }: EditProfileDialogProps) {
+  const { role } = useAuth();
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [department, setDepartment] = useState('');
   const [employeeId, setEmployeeId] = useState('');
   const [joiningDate, setJoiningDate] = useState<Date | undefined>(undefined);
+  const [employeeType, setEmployeeType] = useState<'online' | 'offline'>('offline');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -51,6 +62,7 @@ export function EditProfileDialog({
       setDepartment(profile.department || '');
       setEmployeeId(profile.employee_id || '');
       setJoiningDate(profile.joining_date ? new Date(profile.joining_date) : undefined);
+      setEmployeeType(profile.employee_type || 'offline');
     }
   }, [profile]);
 
@@ -79,6 +91,7 @@ export function EditProfileDialog({
         department: department.trim() || null,
         employee_id: employeeId.trim() || null,
         joining_date: joiningDate ? format(joiningDate, 'yyyy-MM-dd') : null,
+        employee_type: employeeType,
       })
       .eq('id', profile.id);
 
@@ -169,6 +182,24 @@ export function EditProfileDialog({
               </PopoverContent>
             </Popover>
           </div>
+
+          {role === 'admin' && (
+            <div className="space-y-2">
+              <Label>Employee Type</Label>
+              <Select value={employeeType} onValueChange={(v) => setEmployeeType(v as 'online' | 'offline')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="online">Online (Hour Logging Required)</SelectItem>
+                  <SelectItem value="offline">Offline (Attendance Only)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Online employees must log hours daily. Offline employees only need to check in/out.
+              </p>
+            </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
