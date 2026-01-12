@@ -16,6 +16,9 @@ import {
   LogIn,
   LogOut,
   Clock,
+  Trash2,
+  UserX,
+  UserCheck,
 } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import {
@@ -29,8 +32,19 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useEmployees } from '@/hooks/useEmployees';
 import { AddEmployeeDialog } from '@/components/employees/AddEmployeeDialog';
 import { EditProfileDialog } from '@/components/employees/EditProfileDialog';
@@ -46,7 +60,7 @@ interface TodayAttendance {
 
 export default function EmployeesPage() {
   const { role } = useAuth();
-  const { employees, isLoading, refetch } = useEmployees();
+  const { employees, isLoading, refetch, deactivateEmployee, activateEmployee, deleteEmployee } = useEmployees();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
@@ -55,6 +69,9 @@ export default function EmployeesPage() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<typeof employees[0] | null>(null);
   const [todayAttendance, setTodayAttendance] = useState<TodayAttendance[]>([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<typeof employees[0] | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch today's attendance for all employees
   useEffect(() => {
@@ -225,7 +242,34 @@ export default function EmployeesPage() {
                               }}>
                                 Edit Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">Deactivate</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {employee.is_active ? (
+                                <DropdownMenuItem 
+                                  onClick={() => deactivateEmployee(employee.id)}
+                                  className="text-warning"
+                                >
+                                  <UserX className="w-4 h-4 mr-2" />
+                                  Deactivate
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem 
+                                  onClick={() => activateEmployee(employee.id)}
+                                  className="text-success"
+                                >
+                                  <UserCheck className="w-4 h-4 mr-2" />
+                                  Activate
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  setEmployeeToDelete(employee);
+                                  setShowDeleteDialog(true);
+                                }}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Employee
+                              </DropdownMenuItem>
                             </>
                           )}
                         </DropdownMenuContent>
@@ -285,6 +329,51 @@ export default function EmployeesPage() {
         profile={selectedEmployee}
         onSuccess={refetch}
       />
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Employee</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{employeeToDelete?.full_name}</strong>? 
+              This will permanently remove the employee and all their records including:
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>All leave requests (approved, pending, rejected)</li>
+                <li>Leave balance</li>
+                <li>Attendance records</li>
+                <li>Work hours logs</li>
+              </ul>
+              <span className="block mt-2 text-destructive font-medium">This action cannot be undone.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (employeeToDelete) {
+                  setIsDeleting(true);
+                  await deleteEmployee(employeeToDelete.id);
+                  setIsDeleting(false);
+                  setShowDeleteDialog(false);
+                  setEmployeeToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Employee'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
