@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import {
   Filter,
   Loader2,
   History,
+  User,
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import {
@@ -23,17 +24,48 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useLeave } from '@/hooks/useLeave';
+import { format, parseISO } from 'date-fns';
 
 export default function LeaveRequestsPage() {
   const { role } = useAuth();
   const { allLeaveRequests, isLoading, approveLeave, rejectLeave } = useLeave();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [monthFilter, setMonthFilter] = useState<string>('all');
+  const [employeeFilter, setEmployeeFilter] = useState<string>('all');
 
   // Only admin and manager can access this
   if (role !== 'admin' && role !== 'manager') {
     return <Navigate to="/dashboard" replace />;
   }
+
+  // Get unique employees for the filter dropdown
+  const uniqueEmployees = useMemo(() => {
+    const employeeMap = new Map<string, { id: string; name: string }>();
+    allLeaveRequests.forEach(req => {
+      if (req.user_id && req.profiles?.full_name) {
+        employeeMap.set(req.user_id, { 
+          id: req.user_id, 
+          name: req.profiles.full_name 
+        });
+      }
+    });
+    return Array.from(employeeMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [allLeaveRequests]);
+
+  // Generate month options (last 12 months)
+  const monthOptions = useMemo(() => {
+    const months = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        value: format(date, 'yyyy-MM'),
+        label: format(date, 'MMMM yyyy'),
+      });
+    }
+    return months;
+  }, []);
 
   const filteredRequests = allLeaveRequests.filter(req => {
     const employeeName = req.profiles?.full_name || '';
@@ -41,7 +73,18 @@ export default function LeaveRequestsPage() {
     const matchesSearch = employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           department.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    
+    // Month filter - check if the leave request falls in the selected month
+    let matchesMonth = true;
+    if (monthFilter !== 'all') {
+      const requestMonth = format(parseISO(req.start_date), 'yyyy-MM');
+      matchesMonth = requestMonth === monthFilter;
+    }
+
+    // Employee filter
+    const matchesEmployee = employeeFilter === 'all' || req.user_id === employeeFilter;
+
+    return matchesSearch && matchesStatus && matchesMonth && matchesEmployee;
   });
 
   const pendingCount = allLeaveRequests.filter(r => r.status === 'pending').length;
@@ -82,18 +125,50 @@ export default function LeaveRequestsPage() {
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name or department..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or department..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Filter className="w-4 h-4 text-muted-foreground" />
+                
+                {/* Employee Filter */}
+                <Select value={employeeFilter} onValueChange={setEmployeeFilter}>
+                  <SelectTrigger className="w-48">
+                    <User className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Select Employee" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Employees</SelectItem>
+                    {uniqueEmployees.map(emp => (
+                      <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Month Filter */}
+                <Select value={monthFilter} onValueChange={setMonthFilter}>
+                  <SelectTrigger className="w-44">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Select Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Months</SelectItem>
+                    {monthOptions.map(month => (
+                      <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Status Filter */}
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Filter by status" />
@@ -105,6 +180,22 @@ export default function LeaveRequestsPage() {
                     <SelectItem value="rejected">Rejected</SelectItem>
                   </SelectContent>
                 </Select>
+
+                {/* Clear filters button */}
+                {(employeeFilter !== 'all' || monthFilter !== 'all' || statusFilter !== 'all' || searchTerm) && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      setEmployeeFilter('all');
+                      setMonthFilter('all');
+                      setStatusFilter('all');
+                      setSearchTerm('');
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
