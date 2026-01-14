@@ -15,8 +15,8 @@ import { Loader2 } from 'lucide-react';
 interface LeaveSettings {
   id: string;
   casual_leave: number;
-  sick_leave: number;
   earned_leave: number;
+  max_earned_leave: number;
 }
 
 interface LeaveSettingsDialogProps {
@@ -34,17 +34,17 @@ export function LeaveSettingsDialog({
 }: LeaveSettingsDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    casualLeave: 12,
-    sickLeave: 10,
+    casualLeave: 22,
     earnedLeave: 15,
+    maxEarnedLeave: 45,
   });
 
   useEffect(() => {
     if (settings) {
       setFormData({
         casualLeave: settings.casual_leave,
-        sickLeave: settings.sick_leave,
         earnedLeave: settings.earned_leave,
+        maxEarnedLeave: settings.max_earned_leave,
       });
     }
   }, [settings]);
@@ -59,8 +59,8 @@ export function LeaveSettingsDialog({
           .from('default_leave_settings')
           .update({
             casual_leave: formData.casualLeave,
-            sick_leave: formData.sickLeave,
             earned_leave: formData.earnedLeave,
+            max_earned_leave: formData.maxEarnedLeave,
           })
           .eq('id', settings.id);
 
@@ -68,8 +68,8 @@ export function LeaveSettingsDialog({
       } else {
         const { error } = await supabase.from('default_leave_settings').insert({
           casual_leave: formData.casualLeave,
-          sick_leave: formData.sickLeave,
           earned_leave: formData.earnedLeave,
+          max_earned_leave: formData.maxEarnedLeave,
         });
 
         if (error) throw error;
@@ -114,18 +114,7 @@ export function LeaveSettingsDialog({
                 setFormData({ ...formData, casualLeave: parseInt(e.target.value) || 0 })
               }
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="sickLeave">Sick Leave (days)</Label>
-            <Input
-              id="sickLeave"
-              type="number"
-              min="0"
-              value={formData.sickLeave}
-              onChange={(e) =>
-                setFormData({ ...formData, sickLeave: parseInt(e.target.value) || 0 })
-              }
-            />
+            <p className="text-xs text-muted-foreground">Combined casual + sick leave</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="earnedLeave">Earned Leave (days)</Label>
@@ -138,6 +127,20 @@ export function LeaveSettingsDialog({
                 setFormData({ ...formData, earnedLeave: parseInt(e.target.value) || 0 })
               }
             />
+            <p className="text-xs text-muted-foreground">1 day earned per 20 consecutive work days</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="maxEarnedLeave">Max Earned Leave Carry Forward (days)</Label>
+            <Input
+              id="maxEarnedLeave"
+              type="number"
+              min="0"
+              value={formData.maxEarnedLeave}
+              onChange={(e) =>
+                setFormData({ ...formData, maxEarnedLeave: parseInt(e.target.value) || 0 })
+              }
+            />
+            <p className="text-xs text-muted-foreground">Excess will lapse at year-end</p>
           </div>
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

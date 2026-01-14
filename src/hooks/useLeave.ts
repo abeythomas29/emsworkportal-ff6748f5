@@ -7,15 +7,15 @@ export interface LeaveBalance {
   id: string;
   user_id: string;
   casual_leave: number;
-  sick_leave: number;
   earned_leave: number;
   lwp_taken: number;
+  consecutive_work_days: number;
 }
 
 export interface LeaveRequest {
   id: string;
   user_id: string;
-  leave_type: 'casual' | 'sick' | 'earned' | 'lwp';
+  leave_type: 'casual' | 'earned' | 'lwp';
   start_date: string;
   end_date: string;
   is_half_day: boolean;

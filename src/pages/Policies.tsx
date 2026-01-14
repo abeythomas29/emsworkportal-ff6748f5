@@ -40,8 +40,8 @@ interface Policy {
 interface LeaveSettings {
   id: string;
   casual_leave: number;
-  sick_leave: number;
   earned_leave: number;
+  max_earned_leave: number;
 }
 
 export default function PoliciesPage() {
@@ -218,22 +218,18 @@ export default function PoliciesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="p-4 rounded-lg bg-info/10 text-center">
-                <p className="text-2xl font-bold text-info">{leaveSettings?.casual_leave ?? 12}</p>
+                <p className="text-2xl font-bold text-info">{leaveSettings?.casual_leave ?? 22}</p>
                 <p className="text-sm text-muted-foreground">Casual Leave</p>
-              </div>
-              <div className="p-4 rounded-lg bg-warning/10 text-center">
-                <p className="text-2xl font-bold text-warning">{leaveSettings?.sick_leave ?? 10}</p>
-                <p className="text-sm text-muted-foreground">Sick Leave</p>
               </div>
               <div className="p-4 rounded-lg bg-success/10 text-center">
                 <p className="text-2xl font-bold text-success">{leaveSettings?.earned_leave ?? 15}</p>
                 <p className="text-sm text-muted-foreground">Earned Leave</p>
               </div>
               <div className="p-4 rounded-lg bg-muted text-center">
-                <p className="text-2xl font-bold text-foreground">∞</p>
-                <p className="text-sm text-muted-foreground">LWP (Unlimited)</p>
+                <p className="text-2xl font-bold text-foreground">{leaveSettings?.max_earned_leave ?? 45}</p>
+                <p className="text-sm text-muted-foreground">Max Earned Leave Carry Forward</p>
               </div>
             </div>
             <div className="flex justify-end mt-4">

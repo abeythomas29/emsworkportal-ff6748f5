@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,9 +17,9 @@ interface LeaveBalance {
   id: string;
   user_id: string;
   casual_leave: number;
-  sick_leave: number;
   earned_leave: number;
   lwp_taken: number;
+  consecutive_work_days: number;
 }
 
 interface EditLeaveBalanceDialogProps {
@@ -37,21 +37,21 @@ export function EditLeaveBalanceDialog({
   employeeName,
   onSuccess,
 }: EditLeaveBalanceDialogProps) {
-  const [casualLeave, setCasualLeave] = useState(leaveBalance?.casual_leave ?? 12);
-  const [sickLeave, setSickLeave] = useState(leaveBalance?.sick_leave ?? 10);
+  const [casualLeave, setCasualLeave] = useState(leaveBalance?.casual_leave ?? 22);
   const [earnedLeave, setEarnedLeave] = useState(leaveBalance?.earned_leave ?? 15);
   const [lwpTaken, setLwpTaken] = useState(leaveBalance?.lwp_taken ?? 0);
+  const [consecutiveWorkDays, setConsecutiveWorkDays] = useState(leaveBalance?.consecutive_work_days ?? 0);
   const [isLoading, setIsLoading] = useState(false);
 
   // Update state when leaveBalance changes
-  useState(() => {
+  useEffect(() => {
     if (leaveBalance) {
       setCasualLeave(leaveBalance.casual_leave);
-      setSickLeave(leaveBalance.sick_leave);
       setEarnedLeave(leaveBalance.earned_leave);
       setLwpTaken(leaveBalance.lwp_taken);
+      setConsecutiveWorkDays(leaveBalance.consecutive_work_days);
     }
-  });
+  }, [leaveBalance]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,9 +63,9 @@ export function EditLeaveBalanceDialog({
       .from('leave_balances')
       .update({
         casual_leave: casualLeave,
-        sick_leave: sickLeave,
         earned_leave: earnedLeave,
         lwp_taken: lwpTaken,
+        consecutive_work_days: consecutiveWorkDays,
       })
       .eq('id', leaveBalance.id);
 
@@ -105,22 +105,12 @@ export function EditLeaveBalanceDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sick">Sick Leave</Label>
-              <Input
-                id="sick"
-                type="number"
-                min="0"
-                step="0.5"
-                value={sickLeave}
-                onChange={(e) => setSickLeave(parseFloat(e.target.value) || 0)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="earned">Earned Leave</Label>
+              <Label htmlFor="earned">Earned Leave (Max 45)</Label>
               <Input
                 id="earned"
                 type="number"
                 min="0"
+                max="45"
                 step="0.5"
                 value={earnedLeave}
                 onChange={(e) => setEarnedLeave(parseFloat(e.target.value) || 0)}
@@ -136,6 +126,17 @@ export function EditLeaveBalanceDialog({
                 value={lwpTaken}
                 onChange={(e) => setLwpTaken(parseFloat(e.target.value) || 0)}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="consecutive">Consecutive Work Days</Label>
+              <Input
+                id="consecutive"
+                type="number"
+                min="0"
+                value={consecutiveWorkDays}
+                onChange={(e) => setConsecutiveWorkDays(parseInt(e.target.value) || 0)}
+              />
+              <p className="text-xs text-muted-foreground">1 earned leave added every 20 days</p>
             </div>
           </div>
           <DialogFooter>

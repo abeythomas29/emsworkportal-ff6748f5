@@ -62,9 +62,9 @@ interface LeaveBalance {
   id: string;
   user_id: string;
   casual_leave: number;
-  sick_leave: number;
   earned_leave: number;
   lwp_taken: number;
+  consecutive_work_days: number;
 }
 
 export default function EmployeeDetailPage() {
@@ -396,17 +396,17 @@ export default function EmployeeDetailPage() {
                       <p className="text-2xl font-bold text-primary">{leaveBalance.casual_leave}</p>
                       <p className="text-sm text-muted-foreground">Casual Leave</p>
                     </div>
-                    <div className="p-4 rounded-lg bg-blue-500/10 text-center">
-                      <p className="text-2xl font-bold text-blue-500">{leaveBalance.sick_leave}</p>
-                      <p className="text-sm text-muted-foreground">Sick Leave</p>
-                    </div>
                     <div className="p-4 rounded-lg bg-green-500/10 text-center">
                       <p className="text-2xl font-bold text-green-500">{leaveBalance.earned_leave}</p>
-                      <p className="text-sm text-muted-foreground">Earned Leave</p>
+                      <p className="text-sm text-muted-foreground">Earned Leave (Max 45)</p>
                     </div>
                     <div className="p-4 rounded-lg bg-orange-500/10 text-center">
                       <p className="text-2xl font-bold text-orange-500">{leaveBalance.lwp_taken}</p>
                       <p className="text-sm text-muted-foreground">LWP Taken</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-blue-500/10 text-center">
+                      <p className="text-2xl font-bold text-blue-500">{leaveBalance.consecutive_work_days}</p>
+                      <p className="text-sm text-muted-foreground">Consecutive Work Days</p>
                     </div>
                   </div>
                 ) : (
