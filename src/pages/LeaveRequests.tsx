@@ -92,7 +92,6 @@ export default function LeaveRequestsPage() {
   const getLeaveTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       casual: 'Casual Leave',
-      sick: 'Sick Leave',
       earned: 'Earned Leave',
       lwp: 'Leave Without Pay',
     };

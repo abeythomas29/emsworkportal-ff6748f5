@@ -55,7 +55,6 @@ export default function DashboardPage() {
   const getLeaveTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       casual: 'Casual',
-      sick: 'Sick',
       earned: 'Earned',
       lwp: 'LWP',
     };
@@ -164,7 +163,7 @@ export default function DashboardPage() {
             <Link to="/leave" className="block">
               <StatCard
                 title="Leave Balance"
-                value={leaveBalance ? (leaveBalance.casual_leave + leaveBalance.sick_leave + leaveBalance.earned_leave) : 37}
+                value={leaveBalance ? (leaveBalance.casual_leave + leaveBalance.earned_leave) : 37}
                 subtitle="Days remaining"
                 icon={<Calendar className="w-6 h-6 text-info" />}
                 variant="secondary"

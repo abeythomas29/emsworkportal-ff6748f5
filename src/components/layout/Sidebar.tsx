@@ -12,6 +12,7 @@ import {
   ClipboardList,
   BarChart3,
   CalendarCheck,
+  CalendarDays,
   Menu,
   X,
 } from 'lucide-react';
@@ -51,6 +52,12 @@ const navItems: NavItem[] = [
     icon: <CalendarCheck size={20} />,
     label: 'Leave Management',
     path: '/leave',
+    roles: ['admin', 'manager', 'employee'],
+  },
+  {
+    icon: <CalendarDays size={20} />,
+    label: 'Holidays',
+    path: '/holidays',
     roles: ['admin', 'manager', 'employee'],
   },
   {

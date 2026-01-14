@@ -58,7 +58,7 @@ export type Database = {
           casual_leave: number
           earned_leave: number
           id: string
-          sick_leave: number
+          max_earned_leave: number
           updated_at: string
           updated_by: string | null
         }
@@ -66,7 +66,7 @@ export type Database = {
           casual_leave?: number
           earned_leave?: number
           id?: string
-          sick_leave?: number
+          max_earned_leave?: number
           updated_at?: string
           updated_by?: string | null
         }
@@ -74,40 +74,105 @@ export type Database = {
           casual_leave?: number
           earned_leave?: number
           id?: string
-          sick_leave?: number
+          max_earned_leave?: number
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      employee_holidays: {
+        Row: {
+          created_at: string | null
+          holiday_id: string
+          id: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          holiday_id: string
+          id?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          holiday_id?: string
+          id?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_holidays_holiday_id_fkey"
+            columns: ["holiday_id"]
+            isOneToOne: false
+            referencedRelation: "holidays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      holidays: {
+        Row: {
+          created_at: string | null
+          date: string
+          day_of_week: string
+          holiday_type: string
+          id: string
+          name: string
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          day_of_week: string
+          holiday_type: string
+          id?: string
+          name: string
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          day_of_week?: string
+          holiday_type?: string
+          id?: string
+          name?: string
+          updated_at?: string | null
+          year?: number
         }
         Relationships: []
       }
       leave_balances: {
         Row: {
           casual_leave: number
+          consecutive_work_days: number
           created_at: string
           earned_leave: number
           id: string
           lwp_taken: number
-          sick_leave: number
           updated_at: string
           user_id: string
         }
         Insert: {
           casual_leave?: number
+          consecutive_work_days?: number
           created_at?: string
           earned_leave?: number
           id?: string
           lwp_taken?: number
-          sick_leave?: number
           updated_at?: string
           user_id: string
         }
         Update: {
           casual_leave?: number
+          consecutive_work_days?: number
           created_at?: string
           earned_leave?: number
           id?: string
           lwp_taken?: number
-          sick_leave?: number
           updated_at?: string
           user_id?: string
         }
@@ -316,6 +381,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accrue_earned_leave: { Args: never; Returns: undefined }
+      cap_earned_leave_year_end: { Args: never; Returns: undefined }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

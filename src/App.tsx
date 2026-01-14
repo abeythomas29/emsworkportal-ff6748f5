@@ -17,6 +17,7 @@ import EmployeeDetailPage from "./pages/EmployeeDetail";
 import ReportsPage from "./pages/Reports";
 import AttendanceReportPage from "./pages/AttendanceReport";
 import PoliciesPage from "./pages/Policies";
+import HolidaysPage from "./pages/Holidays";
 import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/attendance-report" element={<AttendanceReportPage />} />
             <Route path="/policies" element={<PoliciesPage />} />
+            <Route path="/holidays" element={<HolidaysPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

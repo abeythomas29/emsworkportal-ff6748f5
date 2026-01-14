@@ -66,22 +66,15 @@ export default function LeavePage() {
     { 
       type: 'casual', 
       label: 'Casual Leave', 
-      remaining: leaveBalance?.casual_leave ?? 12, 
-      total: 12, 
+      remaining: leaveBalance?.casual_leave ?? 22, 
+      total: 22, 
       color: 'bg-info' 
-    },
-    { 
-      type: 'sick', 
-      label: 'Sick Leave', 
-      remaining: leaveBalance?.sick_leave ?? 10, 
-      total: 10, 
-      color: 'bg-warning' 
     },
     { 
       type: 'earned', 
       label: 'Earned Leave', 
       remaining: leaveBalance?.earned_leave ?? 15, 
-      total: 15, 
+      total: 45, 
       color: 'bg-success' 
     },
     { 
@@ -96,7 +89,6 @@ export default function LeavePage() {
   const getLeaveTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       casual: 'Casual Leave',
-      sick: 'Sick Leave',
       earned: 'Earned Leave',
       lwp: 'Leave Without Pay',
     };
@@ -149,10 +141,7 @@ export default function LeavePage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="casual">
-                        Casual Leave ({leaveBalance?.casual_leave ?? 12} remaining)
-                      </SelectItem>
-                      <SelectItem value="sick">
-                        Sick Leave ({leaveBalance?.sick_leave ?? 10} remaining)
+                        Casual Leave ({leaveBalance?.casual_leave ?? 22} remaining)
                       </SelectItem>
                       <SelectItem value="earned">
                         Earned Leave ({leaveBalance?.earned_leave ?? 15} remaining)
