@@ -15,6 +15,7 @@ import {
   CalendarDays,
   Menu,
   X,
+  Calculator,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -83,6 +84,12 @@ const navItems: NavItem[] = [
     label: 'Policies',
     path: '/policies',
     roles: ['admin'],
+  },
+  {
+    icon: <Calculator size={20} />,
+    label: 'Calculator',
+    path: '/calculator',
+    roles: ['admin', 'manager', 'employee'],
   },
   {
     icon: <Settings size={20} />,
