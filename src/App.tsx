@@ -20,6 +20,7 @@ import PoliciesPage from "./pages/Policies";
 import HolidaysPage from "./pages/Holidays";
 import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import CalculatorPage from "./pages/Calculator";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/policies" element={<PoliciesPage />} />
             <Route path="/holidays" element={<HolidaysPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/calculator" element={<CalculatorPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
