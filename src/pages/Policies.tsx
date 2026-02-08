@@ -12,6 +12,7 @@ import {
   Edit,
   Trash2,
   Loader2,
+  Download,
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -208,6 +209,28 @@ export default function PoliciesPage() {
             ))}
           </div>
         )}
+
+        {/* HR Policy Document */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              HR Policy Document
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Download the official EMS HR Policy document for detailed guidelines on company policies, 
+              employee conduct, benefits, and procedures.
+            </p>
+            <Button asChild variant="outline" className="gap-2">
+              <a href="/documents/EMS_HR_Policy.pdf" download="EMS_HR_Policy.pdf">
+                <Download className="w-4 h-4" />
+                Download HR Policy (PDF)
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Leave Balance Configuration */}
         <Card>
