@@ -83,7 +83,7 @@ const navItems: NavItem[] = [
     icon: <FileText size={20} />,
     label: 'Policies',
     path: '/policies',
-    roles: ['admin'],
+    roles: ['admin', 'manager', 'employee'],
   },
   {
     icon: <Calculator size={20} />,
