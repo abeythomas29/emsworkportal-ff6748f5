@@ -55,10 +55,7 @@ export default function PoliciesPage() {
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
   const [deletePolicy, setDeletePolicy] = useState<Policy | null>(null);
 
-  // Only admin can access this
-  if (user?.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
-  }
+  const isAdmin = user?.role === 'admin';
 
   const fetchPolicies = async () => {
     const { data, error } = await supabase
@@ -136,81 +133,25 @@ export default function PoliciesPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Policies</h1>
-            <p className="text-muted-foreground">Manage company policies and leave rules</p>
+            <p className="text-muted-foreground">
+              {isAdmin ? 'Manage company policies and leave rules' : 'View company policies and documents'}
+            </p>
           </div>
-          <Button
-            className="gap-2"
-            onClick={() => {
-              setSelectedPolicy(null);
-              setShowPolicyDialog(true);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            Add Policy
-          </Button>
+          {isAdmin && (
+            <Button
+              className="gap-2"
+              onClick={() => {
+                setSelectedPolicy(null);
+                setShowPolicyDialog(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Add Policy
+            </Button>
+          )}
         </div>
 
-        {/* Policy Cards */}
-        {policies.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">No policies yet</p>
-              <p className="text-sm text-muted-foreground">Create your first policy to get started</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {policies.map((policy) => (
-              <Card key={policy.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <FileText className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base font-semibold">{policy.title}</CardTitle>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                        {policy.category}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => handleEditPolicy(policy)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive"
-                      onClick={() => setDeletePolicy(policy)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {policy.description || 'No description'}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      Last updated: {new Date(policy.updated_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* HR Policy Document */}
+        {/* HR Policy Document - Visible to everyone */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -232,7 +173,72 @@ export default function PoliciesPage() {
           </CardContent>
         </Card>
 
-        {/* Leave Balance Configuration */}
+        {/* Policy Cards - Admin only */}
+        {isAdmin && (
+          <>
+            {policies.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground">No policies yet</p>
+                  <p className="text-sm text-muted-foreground">Create your first policy to get started</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {policies.map((policy) => (
+                  <Card key={policy.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <FileText className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base font-semibold">{policy.title}</CardTitle>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                            {policy.category}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleEditPolicy(policy)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => setDeletePolicy(policy)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {policy.description || 'No description'}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Last updated: {new Date(policy.updated_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Leave Balance Configuration - Admin only */}
+        {isAdmin && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -262,38 +268,43 @@ export default function PoliciesPage() {
             </div>
           </CardContent>
         </Card>
+        )}
       </div>
 
-      <PolicyDialog
-        open={showPolicyDialog}
+      {isAdmin && (
+        <>
+          <PolicyDialog
+            open={showPolicyDialog}
         onOpenChange={setShowPolicyDialog}
         policy={selectedPolicy}
         onSuccess={fetchPolicies}
       />
 
-      <LeaveSettingsDialog
-        open={showLeaveSettingsDialog}
-        onOpenChange={setShowLeaveSettingsDialog}
-        settings={leaveSettings}
-        onSuccess={fetchLeaveSettings}
-      />
+          <LeaveSettingsDialog
+            open={showLeaveSettingsDialog}
+            onOpenChange={setShowLeaveSettingsDialog}
+            settings={leaveSettings}
+            onSuccess={fetchLeaveSettings}
+          />
 
-      <AlertDialog open={!!deletePolicy} onOpenChange={() => setDeletePolicy(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Policy</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{deletePolicy?.title}"? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePolicy} className="bg-destructive text-destructive-foreground">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          <AlertDialog open={!!deletePolicy} onOpenChange={() => setDeletePolicy(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Policy</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete "{deletePolicy?.title}"? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeletePolicy} className="bg-destructive text-destructive-foreground">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+      )}
     </DashboardLayout>
   );
 }
