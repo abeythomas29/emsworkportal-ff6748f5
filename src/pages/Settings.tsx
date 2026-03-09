@@ -17,6 +17,7 @@ import {
   Moon,
   Sun,
   Loader2,
+  Cake,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
@@ -31,6 +32,7 @@ export default function SettingsPage() {
     fullName: profile?.full_name || user?.name || '',
     phoneNumber: (profile as any)?.phone_number || '',
     department: profile?.department || '',
+    birthday: (profile as any)?.birthday || '',
   });
 
   const handleSaveProfile = async () => {
@@ -44,6 +46,7 @@ export default function SettingsPage() {
           full_name: formData.fullName,
           phone_number: formData.phoneNumber || null,
           department: formData.department || null,
+          birthday: formData.birthday || null,
         })
         .eq('id', profile.id);
 
@@ -156,6 +159,19 @@ export default function SettingsPage() {
                     className="pl-10"
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Birthday</Label>
+                <div className="relative">
+                  <Cake className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="date"
+                    className="pl-10"
+                    value={formData.birthday}
+                    onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
+                    max={new Date().toISOString().split('T')[0]}
                   />
                 </div>
               </div>
