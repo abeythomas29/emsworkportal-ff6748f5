@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { useAttendance } from '@/hooks/useAttendance';
 import { useLeave } from '@/hooks/useLeave';
 import { useEmployees } from '@/hooks/useEmployees';
+import { ProfileCompletionDialog } from '@/components/ProfileCompletionDialog';
+import { BirthdayReminders } from '@/components/dashboard/BirthdayReminders';
 import {
   Users,
   Clock,
