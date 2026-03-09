@@ -31,6 +31,7 @@ export default function SettingsPage() {
     fullName: profile?.full_name || user?.name || '',
     phoneNumber: (profile as any)?.phone_number || '',
     department: profile?.department || '',
+    birthday: (profile as any)?.birthday || '',
   });
 
   const handleSaveProfile = async () => {
