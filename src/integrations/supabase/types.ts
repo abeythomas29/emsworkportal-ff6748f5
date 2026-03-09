@@ -386,6 +386,15 @@ export type Database = {
     Functions: {
       accrue_earned_leave: { Args: never; Returns: undefined }
       cap_earned_leave_year_end: { Args: never; Returns: undefined }
+      get_upcoming_birthdays: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          birthday: string
+          full_name: string
+          id: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
