@@ -77,6 +77,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
+      <ProfileCompletionDialog />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
