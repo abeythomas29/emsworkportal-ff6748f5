@@ -18,10 +18,7 @@ export function BirthdayReminders() {
   useEffect(() => {
     const fetchBirthdays = async () => {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, birthday, avatar_url')
-        .not('birthday', 'is', null)
-        .eq('is_active', true);
+        .rpc('get_upcoming_birthdays');
 
       if (error || !data) return;
 
