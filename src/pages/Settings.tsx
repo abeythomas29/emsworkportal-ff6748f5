@@ -17,6 +17,7 @@ import {
   Moon,
   Sun,
   Loader2,
+  Cake,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
