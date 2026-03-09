@@ -10,6 +10,7 @@ export interface Profile {
   department: string | null;
   employee_type: EmployeeType;
   joining_date: string | null;
+  birthday: string | null;
   avatar_url: string | null;
   phone_number: string | null;
   is_active: boolean;

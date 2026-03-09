@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { useAttendance } from '@/hooks/useAttendance';
 import { useLeave } from '@/hooks/useLeave';
 import { useEmployees } from '@/hooks/useEmployees';
+import { ProfileCompletionDialog } from '@/components/ProfileCompletionDialog';
+import { BirthdayReminders } from '@/components/dashboard/BirthdayReminders';
 import {
   Users,
   Clock,
@@ -75,6 +77,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
+      <ProfileCompletionDialog />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -195,6 +198,9 @@ export default function DashboardPage() {
             </Link>
           </div>
         )}
+
+        {/* Birthday Reminders */}
+        <BirthdayReminders />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Check-in/out Card for all employees */}
