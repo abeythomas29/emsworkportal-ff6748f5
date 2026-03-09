@@ -163,6 +163,19 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="space-y-2">
+                <Label>Birthday</Label>
+                <div className="relative">
+                  <Cake className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="date"
+                    className="pl-10"
+                    value={formData.birthday}
+                    onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
+                    max={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
                 <Label>Joining Date</Label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
