@@ -199,6 +199,9 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Birthday Reminders */}
+        <BirthdayReminders />
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Check-in/out Card for all employees */}
           <CheckInOutCard />
