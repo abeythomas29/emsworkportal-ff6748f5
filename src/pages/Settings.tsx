@@ -46,6 +46,7 @@ export default function SettingsPage() {
           full_name: formData.fullName,
           phone_number: formData.phoneNumber || null,
           department: formData.department || null,
+          birthday: formData.birthday || null,
         })
         .eq('id', profile.id);
 
