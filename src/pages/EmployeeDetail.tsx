@@ -36,6 +36,7 @@ interface EmployeeProfile {
   is_active: boolean;
   joining_date: string | null;
   avatar_url: string | null;
+  birthday: string | null;
 }
 
 interface AttendanceRecord {
@@ -242,6 +243,11 @@ export default function EmployeeDetailPage() {
                     <span className="text-muted-foreground flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       Joined: {format(new Date(profile.joining_date), 'MMM dd, yyyy')}
+                    </span>
+                  )}
+                  {profile.birthday && (
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      🎂 Birthday: {format(new Date(profile.birthday + 'T00:00:00'), 'MMM dd')}
                     </span>
                   )}
                 </div>
