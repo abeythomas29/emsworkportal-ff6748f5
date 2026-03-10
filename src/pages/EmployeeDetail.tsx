@@ -244,6 +244,11 @@ export default function EmployeeDetailPage() {
                       Joined: {format(new Date(profile.joining_date), 'MMM dd, yyyy')}
                     </span>
                   )}
+                  {profile.birthday && (
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      🎂 Birthday: {format(new Date(profile.birthday + 'T00:00:00'), 'MMM dd')}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
