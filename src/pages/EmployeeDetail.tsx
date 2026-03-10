@@ -36,6 +36,7 @@ interface EmployeeProfile {
   is_active: boolean;
   joining_date: string | null;
   avatar_url: string | null;
+  birthday: string | null;
 }
 
 interface AttendanceRecord {
