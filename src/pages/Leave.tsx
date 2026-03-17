@@ -22,12 +22,12 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, Plus, Clock, History, Loader2 } from 'lucide-react';
+import { Calendar, Plus, Clock, History, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLeave } from '@/hooks/useLeave';
 
 export default function LeavePage() {
-  const { leaveBalance, leaveRequests, isLoading, applyLeave } = useLeave();
+  const { leaveBalance, leaveRequests, isLoading, applyLeave, cancelLeave } = useLeave();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -315,6 +315,17 @@ export default function LeavePage() {
                       </div>
                       <div className="flex items-center gap-4 md:flex-col md:items-end">
                         <StatusBadge status={leave.status} />
+                        {leave.status === 'pending' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:bg-destructive/10 gap-1"
+                            onClick={() => cancelLeave(leave.id)}
+                          >
+                            <X className="w-3 h-3" />
+                            Cancel
+                          </Button>
+                        )}
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           Applied: {new Date(leave.created_at).toLocaleDateString()}
