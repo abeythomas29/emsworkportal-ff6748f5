@@ -248,6 +248,7 @@ export function useLeave() {
     applyLeave,
     approveLeave,
     rejectLeave,
+    cancelLeave,
     refetch: () => {
       fetchLeaveBalance();
       fetchLeaveRequests();
