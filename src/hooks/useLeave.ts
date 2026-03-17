@@ -185,6 +185,27 @@ export function useLeave() {
     fetchAllLeaveRequests();
   };
 
+  const cancelLeave = async (requestId: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('leave_requests')
+      .delete()
+      .eq('id', requestId)
+      .eq('user_id', user.id)
+      .eq('status', 'pending');
+
+    if (error) {
+      console.error('Error cancelling leave:', error);
+      toast.error('Failed to cancel leave request');
+      return;
+    }
+
+    toast.success('Leave request cancelled');
+    fetchLeaveRequests();
+    fetchLeaveBalance();
+  };
+
   useEffect(() => {
     if (user) {
       setIsLoading(true);
