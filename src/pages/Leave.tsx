@@ -27,7 +27,7 @@ import { toast } from 'sonner';
 import { useLeave } from '@/hooks/useLeave';
 
 export default function LeavePage() {
-  const { leaveBalance, leaveRequests, isLoading, applyLeave } = useLeave();
+  const { leaveBalance, leaveRequests, isLoading, applyLeave, cancelLeave } = useLeave();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
