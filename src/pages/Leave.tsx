@@ -22,7 +22,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, Plus, Clock, History, Loader2 } from 'lucide-react';
+import { Calendar, Plus, Clock, History, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLeave } from '@/hooks/useLeave';
 
