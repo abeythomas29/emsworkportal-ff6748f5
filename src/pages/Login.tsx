@@ -341,12 +341,19 @@ export default function LoginPage() {
             </CardContent>
           </Card>
 
-          <p className="text-center text-sm text-muted-foreground">
-            Need help? Contact{' '}
-            <a href="mailto:support@esotericminerals.com" className="text-primary hover:underline">
-              support@esotericminerals.com
-            </a>
-          </p>
+          <div className="text-center text-sm text-muted-foreground space-y-1">
+            <p>
+              Need help? Contact{' '}
+              <a href="mailto:support@esotericminerals.com" className="text-primary hover:underline">
+                support@esotericminerals.com
+              </a>
+            </p>
+            <p>
+              <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                Privacy Policy
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
