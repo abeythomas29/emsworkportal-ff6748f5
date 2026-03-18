@@ -21,6 +21,7 @@ import HolidaysPage from "./pages/Holidays";
 import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import CalculatorPage from "./pages/Calculator";
+import PrivacyPolicyPage from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/holidays" element={<HolidaysPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/calculator" element={<CalculatorPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
