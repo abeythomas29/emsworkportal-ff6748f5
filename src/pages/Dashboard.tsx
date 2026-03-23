@@ -10,6 +10,7 @@ import { useLeave } from '@/hooks/useLeave';
 import { useEmployees } from '@/hooks/useEmployees';
 import { ProfileCompletionDialog } from '@/components/ProfileCompletionDialog';
 import { BirthdayReminders } from '@/components/dashboard/BirthdayReminders';
+import { OnLeaveToday } from '@/components/dashboard/OnLeaveToday';
 import {
   Users,
   Clock,
@@ -199,8 +200,11 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Birthday Reminders */}
-        <BirthdayReminders />
+        {/* Birthday Reminders & On Leave Today */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <BirthdayReminders />
+          <OnLeaveToday />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Check-in/out Card for all employees */}
