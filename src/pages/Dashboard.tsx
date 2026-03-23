@@ -10,6 +10,7 @@ import { useLeave } from '@/hooks/useLeave';
 import { useEmployees } from '@/hooks/useEmployees';
 import { ProfileCompletionDialog } from '@/components/ProfileCompletionDialog';
 import { BirthdayReminders } from '@/components/dashboard/BirthdayReminders';
+import { OnLeaveToday } from '@/components/dashboard/OnLeaveToday';
 import {
   Users,
   Clock,
