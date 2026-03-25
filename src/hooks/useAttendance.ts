@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AttendanceRecord, AttendanceStatus } from '@/types/auth';
 import { toast } from 'sonner';
+import { logError, logDebug } from '@/lib/logger';
 
 export function useAttendance() {
   const { user } = useAuth();
@@ -16,7 +17,6 @@ export function useAttendance() {
 
   const fetchTodayAttendance = useCallback(async () => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from('attendance')
@@ -26,19 +26,17 @@ export function useAttendance() {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching today attendance:', error);
+        logError('useAttendance.fetchToday', error);
         return;
       }
-
       setTodayAttendance(data as AttendanceRecord | null);
     } catch (error) {
-      console.error('Error in fetchTodayAttendance:', error);
+      logError('useAttendance.fetchToday', error);
     }
   }, [user, today]);
 
   const fetchAttendanceHistory = useCallback(async () => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from('attendance')
@@ -48,13 +46,12 @@ export function useAttendance() {
         .limit(30);
 
       if (error) {
-        console.error('Error fetching attendance history:', error);
+        logError('useAttendance.fetchHistory', error);
         return;
       }
-
       setAttendanceHistory((data || []) as AttendanceRecord[]);
     } catch (error) {
-      console.error('Error in fetchAttendanceHistory:', error);
+      logError('useAttendance.fetchHistory', error);
     } finally {
       setIsLoading(false);
     }
@@ -67,85 +64,49 @@ export function useAttendance() {
     }
   }, [user, fetchTodayAttendance, fetchAttendanceHistory]);
 
-  // Set up realtime subscription
   useEffect(() => {
     if (!user) return;
-
     const channel = supabase
       .channel('attendance-changes')
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'attendance',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('Attendance change:', payload);
+        { event: '*', schema: 'public', table: 'attendance', filter: `user_id=eq.${user.id}` },
+        () => {
           fetchTodayAttendance();
           fetchAttendanceHistory();
         }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [user, fetchTodayAttendance, fetchAttendanceHistory]);
 
   const checkIn = async () => {
-    if (!user) {
-      toast.error('Please log in to check in');
-      return false;
-    }
-
-    if (todayAttendance?.check_in) {
-      toast.info('You have already checked in today');
-      return false;
-    }
+    if (!user) { toast.error('Please log in to check in'); return false; }
+    if (todayAttendance?.check_in) { toast.info('You have already checked in today'); return false; }
 
     setIsCheckingIn(true);
-
     try {
       const now = new Date().toISOString();
-
       if (todayAttendance) {
-        // Update existing record
         const { error } = await supabase
           .from('attendance')
-          .update({
-            check_in: now,
-            status: 'present' as AttendanceStatus,
-          })
+          .update({ check_in: now, status: 'present' as AttendanceStatus })
           .eq('id', todayAttendance.id);
-
         if (error) throw error;
       } else {
-        // Create new record
         const { error } = await supabase
           .from('attendance')
-          .insert({
-            user_id: user.id,
-            date: today,
-            check_in: now,
-            status: 'present' as AttendanceStatus,
-          });
-
+          .insert({ user_id: user.id, date: today, check_in: now, status: 'present' as AttendanceStatus });
         if (error) throw error;
       }
 
-      toast.success('Checked in successfully!', {
-        description: `Time: ${new Date().toLocaleTimeString()}`,
-      });
-
+      toast.success('Checked in successfully!', { description: `Time: ${new Date().toLocaleTimeString()}` });
       await fetchTodayAttendance();
       return true;
-    } catch (error: any) {
-      console.error('Check-in error:', error);
-      toast.error('Failed to check in', {
-        description: error.message,
-      });
+    } catch (error) {
+      logError('useAttendance.checkIn', error);
+      toast.error('Failed to check in', { description: 'Please try again or contact support.' });
       return false;
     } finally {
       setIsCheckingIn(false);
@@ -153,46 +114,25 @@ export function useAttendance() {
   };
 
   const checkOut = async () => {
-    if (!user) {
-      toast.error('Please log in to check out');
-      return false;
-    }
-
-    if (!todayAttendance?.check_in) {
-      toast.error('You need to check in first');
-      return false;
-    }
-
-    if (todayAttendance?.check_out) {
-      toast.info('You have already checked out today');
-      return false;
-    }
+    if (!user) { toast.error('Please log in to check out'); return false; }
+    if (!todayAttendance?.check_in) { toast.error('You need to check in first'); return false; }
+    if (todayAttendance?.check_out) { toast.info('You have already checked out today'); return false; }
 
     setIsCheckingOut(true);
-
     try {
       const now = new Date().toISOString();
-
       const { error } = await supabase
         .from('attendance')
-        .update({
-          check_out: now,
-        })
+        .update({ check_out: now })
         .eq('id', todayAttendance.id);
-
       if (error) throw error;
 
-      toast.success('Checked out successfully!', {
-        description: `Time: ${new Date().toLocaleTimeString()}`,
-      });
-
+      toast.success('Checked out successfully!', { description: `Time: ${new Date().toLocaleTimeString()}` });
       await fetchTodayAttendance();
       return true;
-    } catch (error: any) {
-      console.error('Check-out error:', error);
-      toast.error('Failed to check out', {
-        description: error.message,
-      });
+    } catch (error) {
+      logError('useAttendance.checkOut', error);
+      toast.error('Failed to check out', { description: 'Please try again or contact support.' });
       return false;
     } finally {
       setIsCheckingOut(false);
@@ -201,31 +141,17 @@ export function useAttendance() {
 
   const getWorkingTime = (): string => {
     if (!todayAttendance?.check_in) return '0h 0m';
-
     const checkInTime = new Date(todayAttendance.check_in);
-    const endTime = todayAttendance.check_out
-      ? new Date(todayAttendance.check_out)
-      : new Date();
-
+    const endTime = todayAttendance.check_out ? new Date(todayAttendance.check_out) : new Date();
     const diffMs = endTime.getTime() - checkInTime.getTime();
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
     return `${hours}h ${minutes}m`;
   };
 
   return {
-    todayAttendance,
-    attendanceHistory,
-    isLoading,
-    isCheckingIn,
-    isCheckingOut,
-    checkIn,
-    checkOut,
-    getWorkingTime,
-    refresh: () => {
-      fetchTodayAttendance();
-      fetchAttendanceHistory();
-    },
+    todayAttendance, attendanceHistory, isLoading, isCheckingIn, isCheckingOut,
+    checkIn, checkOut, getWorkingTime,
+    refresh: () => { fetchTodayAttendance(); fetchAttendanceHistory(); },
   };
 }

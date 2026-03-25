@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logError } from '@/lib/logger';
 
 export interface Employee {
   id: string;
@@ -33,20 +34,16 @@ export function useEmployees() {
       .order('full_name', { ascending: true });
 
     if (error) {
-      console.error('Error fetching employees:', error);
+      logError('useEmployees.fetch', error);
       setIsLoading(false);
       return;
     }
 
-    // Fetch roles for all users
     const { data: roles } = await supabase.from('user_roles').select('*');
 
     const employeesWithRoles = (profiles || []).map((profile) => {
       const userRole = roles?.find((r) => r.user_id === profile.id);
-      return {
-        ...profile,
-        role: userRole?.role as 'admin' | 'manager' | 'employee' | undefined,
-      };
+      return { ...profile, role: userRole?.role as 'admin' | 'manager' | 'employee' | undefined };
     });
 
     setEmployees(employeesWithRoles);
@@ -54,105 +51,46 @@ export function useEmployees() {
   };
 
   const deactivateEmployee = async (employeeId: string) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_active: false })
-      .eq('id', employeeId);
-
+    const { error } = await supabase.from('profiles').update({ is_active: false }).eq('id', employeeId);
     if (error) {
-      console.error('Error deactivating employee:', error);
+      logError('useEmployees.deactivate', error);
       toast.error('Failed to deactivate employee');
       return false;
     }
-
     toast.success('Employee deactivated successfully');
     fetchEmployees();
     return true;
   };
 
   const activateEmployee = async (employeeId: string) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_active: true })
-      .eq('id', employeeId);
-
+    const { error } = await supabase.from('profiles').update({ is_active: true }).eq('id', employeeId);
     if (error) {
-      console.error('Error activating employee:', error);
+      logError('useEmployees.activate', error);
       toast.error('Failed to activate employee');
       return false;
     }
-
     toast.success('Employee activated successfully');
     fetchEmployees();
     return true;
   };
 
   const deleteEmployee = async (employeeId: string) => {
-    // Delete in order: leave_requests, leave_balances, attendance, user_roles, profiles
-    const { error: leaveReqError } = await supabase
-      .from('leave_requests')
-      .delete()
-      .eq('user_id', employeeId);
+    const tables = [
+      { name: 'leave_requests', col: 'user_id' },
+      { name: 'leave_balances', col: 'user_id' },
+      { name: 'attendance', col: 'user_id' },
+      { name: 'work_hours', col: 'user_id' },
+      { name: 'user_roles', col: 'user_id' },
+      { name: 'profiles', col: 'id' },
+    ] as const;
 
-    if (leaveReqError) {
-      console.error('Error deleting leave requests:', leaveReqError);
-      toast.error('Failed to delete employee records');
-      return false;
-    }
-
-    const { error: leaveBalError } = await supabase
-      .from('leave_balances')
-      .delete()
-      .eq('user_id', employeeId);
-
-    if (leaveBalError) {
-      console.error('Error deleting leave balance:', leaveBalError);
-      toast.error('Failed to delete employee records');
-      return false;
-    }
-
-    const { error: attendanceError } = await supabase
-      .from('attendance')
-      .delete()
-      .eq('user_id', employeeId);
-
-    if (attendanceError) {
-      console.error('Error deleting attendance:', attendanceError);
-      toast.error('Failed to delete employee records');
-      return false;
-    }
-
-    const { error: workHoursError } = await supabase
-      .from('work_hours')
-      .delete()
-      .eq('user_id', employeeId);
-
-    if (workHoursError) {
-      console.error('Error deleting work hours:', workHoursError);
-      toast.error('Failed to delete employee records');
-      return false;
-    }
-
-    const { error: rolesError } = await supabase
-      .from('user_roles')
-      .delete()
-      .eq('user_id', employeeId);
-
-    if (rolesError) {
-      console.error('Error deleting user role:', rolesError);
-      toast.error('Failed to delete employee records');
-      return false;
-    }
-
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', employeeId);
-
-    if (profileError) {
-      console.error('Error deleting profile:', profileError);
-      toast.error('Failed to delete employee');
-      return false;
+    for (const table of tables) {
+      const { error } = await supabase.from(table.name).delete().eq(table.col, employeeId);
+      if (error) {
+        logError(`useEmployees.delete.${table.name}`, error);
+        toast.error('Failed to delete employee records');
+        return false;
+      }
     }
 
     toast.success('Employee and all records deleted successfully');
@@ -165,11 +103,7 @@ export function useEmployees() {
   }, [user, role]);
 
   return {
-    employees,
-    isLoading,
-    refetch: fetchEmployees,
-    deactivateEmployee,
-    activateEmployee,
-    deleteEmployee,
+    employees, isLoading, refetch: fetchEmployees,
+    deactivateEmployee, activateEmployee, deleteEmployee,
   };
 }

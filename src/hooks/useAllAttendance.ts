@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logError } from '@/lib/logger';
 
 interface AttendanceRecord {
   id: string;
@@ -36,43 +37,33 @@ export function useAllAttendance() {
 
     setIsLoading(true);
     try {
-      // Fetch attendance records
       let query = supabase
         .from('attendance')
         .select('*')
         .order('date', { ascending: false });
 
-      if (startDate) {
-        query = query.gte('date', startDate);
-      }
-      if (endDate) {
-        query = query.lte('date', endDate);
-      }
+      if (startDate) query = query.gte('date', startDate);
+      if (endDate) query = query.lte('date', endDate);
 
       const { data: attendanceData, error: attendanceError } = await query;
 
       if (attendanceError) {
-        console.error('Error fetching attendance:', attendanceError);
+        logError('useAllAttendance.fetch', attendanceError);
         toast.error('Failed to fetch attendance data');
         return;
       }
 
-      // Fetch all profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name, email, department, employee_id');
 
       if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
+        logError('useAllAttendance.fetchProfiles', profilesError);
       }
 
-      // Create a map of profiles by user_id
       const profilesMap = new Map<string, Profile>();
-      (profilesData || []).forEach(p => {
-        profilesMap.set(p.id, p as Profile);
-      });
+      (profilesData || []).forEach(p => profilesMap.set(p.id, p as Profile));
 
-      // Combine attendance with profiles
       const combined: AttendanceWithProfile[] = (attendanceData || []).map(a => ({
         ...a,
         profile: profilesMap.get(a.user_id),
@@ -80,7 +71,7 @@ export function useAllAttendance() {
 
       setAllAttendance(combined);
     } catch (error) {
-      console.error('Error in fetchAllAttendance:', error);
+      logError('useAllAttendance.fetch', error);
     } finally {
       setIsLoading(false);
     }
@@ -96,17 +87,12 @@ export function useAllAttendance() {
 
       toast.success(data.message || 'Absent marking completed');
       return data.count;
-    } catch (error: unknown) {
-      console.error('Error marking absent:', error);
+    } catch (error) {
+      logError('useAllAttendance.markAbsent', error);
       toast.error('Failed to mark absent');
       return 0;
     }
   }, []);
 
-  return {
-    allAttendance,
-    isLoading,
-    fetchAllAttendance,
-    markAbsentForDate,
-  };
+  return { allAttendance, isLoading, fetchAllAttendance, markAbsentForDate };
 }

@@ -1,23 +1,17 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { logError } from '@/lib/logger';
 
 interface AddEmployeeDialogProps {
   open: boolean;
@@ -42,7 +36,6 @@ export function AddEmployeeDialog({ open, onOpenChange, onSuccess }: AddEmployee
     setIsLoading(true);
 
     try {
-      // Create user via Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -57,20 +50,15 @@ export function AddEmployeeDialog({ open, onOpenChange, onSuccess }: AddEmployee
       if (authError) throw authError;
 
       if (authData.user) {
-        // Update profile with additional info
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({
-            department: formData.department || null,
-            employee_id: formData.employeeId || null,
-          })
+          .update({ department: formData.department || null, employee_id: formData.employeeId || null })
           .eq('id', authData.user.id);
 
         if (profileError) {
-          console.error('Profile update error:', profileError);
+          logError('AddEmployee.profileUpdate', profileError);
         }
 
-        // Update role if not employee
         if (formData.role !== 'employee') {
           const { error: roleError } = await supabase
             .from('user_roles')
@@ -78,7 +66,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSuccess }: AddEmployee
             .eq('user_id', authData.user.id);
 
           if (roleError) {
-            console.error('Role update error:', roleError);
+            logError('AddEmployee.roleUpdate', roleError);
           }
         }
 
@@ -90,19 +78,15 @@ export function AddEmployeeDialog({ open, onOpenChange, onSuccess }: AddEmployee
         onSuccess();
         onOpenChange(false);
         setFormData({
-          email: '',
-          password: '',
-          fullName: '',
-          department: '',
-          employeeId: '',
-          employeeType: 'offline',
-          role: 'employee',
+          email: '', password: '', fullName: '', department: '',
+          employeeId: '', employeeType: 'offline', role: 'employee',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
+      logError('AddEmployee.submit', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to add employee',
+        description: 'Failed to add employee. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -119,66 +103,31 @@ export function AddEmployeeDialog({ open, onOpenChange, onSuccess }: AddEmployee
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullName">Full Name *</Label>
-            <Input
-              id="fullName"
-              value={formData.fullName}
-              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-              required
-            />
+            <Input id="fullName" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-            />
+            <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password *</Label>
-            <Input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              minLength={6}
-              required
-            />
+            <Input id="password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} minLength={6} required />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="employeeId">Employee ID</Label>
-              <Input
-                id="employeeId"
-                value={formData.employeeId}
-                onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                placeholder="EMP001"
-              />
+              <Input id="employeeId" value={formData.employeeId} onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })} placeholder="EMP001" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="department">Department</Label>
-              <Input
-                id="department"
-                value={formData.department}
-                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                placeholder="Engineering"
-              />
+              <Input id="department" value={formData.department} onChange={(e) => setFormData({ ...formData, department: e.target.value })} placeholder="Engineering" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Employee Type</Label>
-              <Select
-                value={formData.employeeType}
-                onValueChange={(value: 'online' | 'offline') =>
-                  setFormData({ ...formData, employeeType: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+              <Select value={formData.employeeType} onValueChange={(value: 'online' | 'offline') => setFormData({ ...formData, employeeType: value })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="offline">Offline</SelectItem>
                   <SelectItem value="online">Online</SelectItem>
@@ -187,15 +136,8 @@ export function AddEmployeeDialog({ open, onOpenChange, onSuccess }: AddEmployee
             </div>
             <div className="space-y-2">
               <Label>Role</Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value: 'admin' | 'manager' | 'employee') =>
-                  setFormData({ ...formData, role: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+              <Select value={formData.role} onValueChange={(value: 'admin' | 'manager' | 'employee') => setFormData({ ...formData, role: value })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="employee">Employee</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
@@ -205,9 +147,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSuccess }: AddEmployee
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Add Employee

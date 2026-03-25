@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logError } from '@/lib/logger';
 
 export interface Holiday {
   id: string;
@@ -38,16 +39,14 @@ export function useHolidays() {
       .order('date', { ascending: true });
 
     if (error) {
-      console.error('Error fetching holidays:', error);
+      logError('useHolidays.fetch', error);
       return;
     }
-
     setHolidays((data || []) as Holiday[]);
   };
 
   const fetchSelectedHolidays = async () => {
     if (!user) return;
-
     const { data, error } = await supabase
       .from('employee_holidays')
       .select('*')
@@ -55,17 +54,15 @@ export function useHolidays() {
       .eq('year', currentYear);
 
     if (error) {
-      console.error('Error fetching selected holidays:', error);
+      logError('useHolidays.fetchSelected', error);
       return;
     }
-
     setSelectedHolidays((data || []) as EmployeeHoliday[]);
   };
 
   const selectHoliday = async (holidayId: string) => {
     if (!user) return { error: 'Not authenticated' };
 
-    // Check if user already has 6 optional holidays selected
     const optionalHolidays = holidays.filter(h => h.holiday_type === 'optional');
     const selectedOptionalCount = selectedHolidays.filter(
       sh => optionalHolidays.some(oh => oh.id === sh.holiday_id)
@@ -83,9 +80,9 @@ export function useHolidays() {
     });
 
     if (error) {
-      console.error('Error selecting holiday:', error);
+      logError('useHolidays.select', error);
       toast.error('Failed to select holiday');
-      return { error: error.message };
+      return { error: 'Failed to select holiday. Please try again.' };
     }
 
     toast.success('Holiday selected');
@@ -103,9 +100,9 @@ export function useHolidays() {
       .eq('holiday_id', holidayId);
 
     if (error) {
-      console.error('Error deselecting holiday:', error);
+      logError('useHolidays.deselect', error);
       toast.error('Failed to deselect holiday');
-      return { error: error.message };
+      return { error: 'Failed to deselect holiday. Please try again.' };
     }
 
     toast.success('Holiday deselected');
@@ -113,47 +110,25 @@ export function useHolidays() {
     return { error: null };
   };
 
-  const isHolidaySelected = (holidayId: string) => {
-    return selectedHolidays.some(sh => sh.holiday_id === holidayId);
-  };
-
-  const getMandatoryHolidays = () => {
-    return holidays.filter(h => h.holiday_type === 'mandatory');
-  };
-
-  const getOptionalHolidays = () => {
-    return holidays.filter(h => h.holiday_type === 'optional');
-  };
-
+  const isHolidaySelected = (holidayId: string) => selectedHolidays.some(sh => sh.holiday_id === holidayId);
+  const getMandatoryHolidays = () => holidays.filter(h => h.holiday_type === 'mandatory');
+  const getOptionalHolidays = () => holidays.filter(h => h.holiday_type === 'optional');
   const getSelectedOptionalCount = () => {
     const optionalHolidays = holidays.filter(h => h.holiday_type === 'optional');
-    return selectedHolidays.filter(
-      sh => optionalHolidays.some(oh => oh.id === sh.holiday_id)
-    ).length;
+    return selectedHolidays.filter(sh => optionalHolidays.some(oh => oh.id === sh.holiday_id)).length;
   };
 
   useEffect(() => {
     if (user) {
       setIsLoading(true);
-      Promise.all([fetchHolidays(), fetchSelectedHolidays()]).finally(() =>
-        setIsLoading(false)
-      );
+      Promise.all([fetchHolidays(), fetchSelectedHolidays()]).finally(() => setIsLoading(false));
     }
   }, [user]);
 
   return {
-    holidays,
-    selectedHolidays,
-    isLoading,
-    selectHoliday,
-    deselectHoliday,
-    isHolidaySelected,
-    getMandatoryHolidays,
-    getOptionalHolidays,
-    getSelectedOptionalCount,
-    refetch: () => {
-      fetchHolidays();
-      fetchSelectedHolidays();
-    },
+    holidays, selectedHolidays, isLoading,
+    selectHoliday, deselectHoliday, isHolidaySelected,
+    getMandatoryHolidays, getOptionalHolidays, getSelectedOptionalCount,
+    refetch: () => { fetchHolidays(); fetchSelectedHolidays(); },
   };
 }
