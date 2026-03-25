@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Profile, UserRole, AuthState } from '@/types/auth';
+import { logError } from '@/lib/logger';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<{ error: string | null }>;
@@ -35,7 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserData = async (userId: string) => {
     try {
-      // Fetch profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -43,11 +43,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (profileError) {
-        console.error('Error fetching profile:', profileError);
+        logError('AuthContext.fetchProfile', profileError);
         return;
       }
 
-      // Fetch role
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
@@ -55,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (roleError) {
-        console.error('Error fetching role:', roleError);
+        logError('AuthContext.fetchRole', roleError);
       }
 
       const userRole = (roleData?.role as UserRole) || 'employee';
@@ -66,18 +65,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(mapProfileToUser(profileData as Profile, userRole));
       }
     } catch (error) {
-      console.error('Error in fetchUserData:', error);
+      logError('AuthContext.fetchUserData', error);
     }
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         
         if (session?.user) {
-          // Use setTimeout to prevent deadlock
           setTimeout(() => {
             fetchUserData(session.user.id);
           }, 0);
@@ -91,7 +88,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
@@ -111,15 +107,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<{ error: string | null }> => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        return { error: error.message };
-      }
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { error: error.message };
       return { error: null };
     } catch (error) {
       return { error: 'An unexpected error occurred' };
@@ -129,16 +118,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = async (email: string, password: string, fullName: string): Promise<{ error: string | null }> => {
     try {
       const redirectUrl = `${window.location.origin}/`;
-      
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName,
-            employee_type: 'offline',
-          },
+          data: { full_name: fullName, employee_type: 'offline' },
         },
       });
 
@@ -148,7 +133,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return { error: error.message };
       }
-
       return { error: null };
     } catch (error) {
       return { error: 'An unexpected error occurred' };
@@ -164,15 +148,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const value: AuthContextType = {
-    user,
-    profile,
-    role,
+    user, profile, role,
     isAuthenticated: !!session && !!user,
-    isLoading,
-    login,
-    signup,
-    logout,
-    refreshProfile,
+    isLoading, login, signup, logout, refreshProfile,
   };
 
   return (

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logError } from '@/lib/logger';
 
 export interface LeaveBalance {
   id: string;
@@ -43,7 +44,6 @@ export function useLeave() {
 
   const fetchLeaveBalance = async () => {
     if (!user) return;
-
     const { data, error } = await supabase
       .from('leave_balances')
       .select('*')
@@ -51,16 +51,14 @@ export function useLeave() {
       .maybeSingle();
 
     if (error) {
-      console.error('Error fetching leave balance:', error);
+      logError('useLeave.fetchBalance', error);
       return;
     }
-
     setLeaveBalance(data);
   };
 
   const fetchLeaveRequests = async () => {
     if (!user) return;
-
     const { data, error } = await supabase
       .from('leave_requests')
       .select('*')
@@ -68,16 +66,14 @@ export function useLeave() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching leave requests:', error);
+      logError('useLeave.fetchRequests', error);
       return;
     }
-
     setLeaveRequests((data || []) as LeaveRequest[]);
   };
 
   const fetchAllLeaveRequests = async () => {
     if (!user) return;
-
     const { data, error } = await supabase
       .from('leave_requests')
       .select(`
@@ -91,13 +87,8 @@ export function useLeave() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching all leave requests:', error);
+      logError('useLeave.fetchAllRequests', error);
       toast.error('Failed to load leave requests');
-      return;
-    }
-
-    if (error) {
-      console.error('Error fetching all leave requests:', error);
       return;
     }
 
@@ -113,7 +104,6 @@ export function useLeave() {
   }) => {
     if (!user) return { error: 'Not authenticated' };
 
-    // Calculate days
     const start = new Date(data.startDate);
     const end = data.endDate ? new Date(data.endDate) : start;
     const diffTime = Math.abs(end.getTime() - start.getTime());
@@ -131,9 +121,9 @@ export function useLeave() {
     });
 
     if (error) {
-      console.error('Error applying leave:', error);
+      logError('useLeave.applyLeave', error);
       toast.error('Failed to apply for leave');
-      return { error: error.message };
+      return { error: 'Failed to apply for leave. Please try again.' };
     }
 
     toast.success('Leave application submitted!');
@@ -143,51 +133,38 @@ export function useLeave() {
 
   const approveLeave = async (requestId: string) => {
     if (!user) return;
-
     const { error } = await supabase
       .from('leave_requests')
-      .update({
-        status: 'approved',
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-      })
+      .update({ status: 'approved', approved_by: user.id, approved_at: new Date().toISOString() })
       .eq('id', requestId);
 
     if (error) {
-      console.error('Error approving leave:', error);
+      logError('useLeave.approveLeave', error);
       toast.error('Failed to approve leave');
       return;
     }
-
     toast.success('Leave request approved');
     fetchAllLeaveRequests();
   };
 
   const rejectLeave = async (requestId: string) => {
     if (!user) return;
-
     const { error } = await supabase
       .from('leave_requests')
-      .update({
-        status: 'rejected',
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-      })
+      .update({ status: 'rejected', approved_by: user.id, approved_at: new Date().toISOString() })
       .eq('id', requestId);
 
     if (error) {
-      console.error('Error rejecting leave:', error);
+      logError('useLeave.rejectLeave', error);
       toast.error('Failed to reject leave');
       return;
     }
-
     toast.error('Leave request rejected');
     fetchAllLeaveRequests();
   };
 
   const cancelLeave = async (requestId: string) => {
     if (!user) return;
-
     const { error } = await supabase
       .from('leave_requests')
       .delete()
@@ -196,11 +173,10 @@ export function useLeave() {
       .eq('status', 'pending');
 
     if (error) {
-      console.error('Error cancelling leave:', error);
+      logError('useLeave.cancelLeave', error);
       toast.error('Failed to cancel leave request');
       return;
     }
-
     toast.success('Leave request cancelled');
     fetchLeaveRequests();
     fetchLeaveBalance();
@@ -215,44 +191,22 @@ export function useLeave() {
     }
   }, [user]);
 
-  // Setup realtime subscription
   useEffect(() => {
     if (!user) return;
-
     const channel = supabase
       .channel('leave-requests-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'leave_requests',
-        },
-        () => {
-          fetchLeaveRequests();
-          fetchAllLeaveRequests();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leave_requests' }, () => {
+        fetchLeaveRequests();
+        fetchAllLeaveRequests();
+      })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   return {
-    leaveBalance,
-    leaveRequests,
-    allLeaveRequests,
-    isLoading,
-    applyLeave,
-    approveLeave,
-    rejectLeave,
-    cancelLeave,
-    refetch: () => {
-      fetchLeaveBalance();
-      fetchLeaveRequests();
-      fetchAllLeaveRequests();
-    },
+    leaveBalance, leaveRequests, allLeaveRequests, isLoading,
+    applyLeave, approveLeave, rejectLeave, cancelLeave,
+    refetch: () => { fetchLeaveBalance(); fetchLeaveRequests(); fetchAllLeaveRequests(); },
   };
 }
