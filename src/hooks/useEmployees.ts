@@ -75,23 +75,24 @@ export function useEmployees() {
   };
 
   const deleteEmployee = async (employeeId: string) => {
-    const tables = [
-      { name: 'leave_requests', col: 'user_id' },
-      { name: 'leave_balances', col: 'user_id' },
-      { name: 'attendance', col: 'user_id' },
-      { name: 'work_hours', col: 'user_id' },
-      { name: 'user_roles', col: 'user_id' },
-      { name: 'profiles', col: 'id' },
-    ] as const;
+    // Delete in order: leave_requests, leave_balances, attendance, work_hours, user_roles, profiles
+    const { error: lrErr } = await supabase.from('leave_requests').delete().eq('user_id', employeeId);
+    if (lrErr) { logError('useEmployees.delete.leave_requests', lrErr); toast.error('Failed to delete employee records'); return false; }
 
-    for (const table of tables) {
-      const { error } = await supabase.from(table.name).delete().eq(table.col, employeeId);
-      if (error) {
-        logError(`useEmployees.delete.${table.name}`, error);
-        toast.error('Failed to delete employee records');
-        return false;
-      }
-    }
+    const { error: lbErr } = await supabase.from('leave_balances').delete().eq('user_id', employeeId);
+    if (lbErr) { logError('useEmployees.delete.leave_balances', lbErr); toast.error('Failed to delete employee records'); return false; }
+
+    const { error: atErr } = await supabase.from('attendance').delete().eq('user_id', employeeId);
+    if (atErr) { logError('useEmployees.delete.attendance', atErr); toast.error('Failed to delete employee records'); return false; }
+
+    const { error: whErr } = await supabase.from('work_hours').delete().eq('user_id', employeeId);
+    if (whErr) { logError('useEmployees.delete.work_hours', whErr); toast.error('Failed to delete employee records'); return false; }
+
+    const { error: urErr } = await supabase.from('user_roles').delete().eq('user_id', employeeId);
+    if (urErr) { logError('useEmployees.delete.user_roles', urErr); toast.error('Failed to delete employee records'); return false; }
+
+    const { error: prErr } = await supabase.from('profiles').delete().eq('id', employeeId);
+    if (prErr) { logError('useEmployees.delete.profiles', prErr); toast.error('Failed to delete employee'); return false; }
 
     toast.success('Employee and all records deleted successfully');
     fetchEmployees();
