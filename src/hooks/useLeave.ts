@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { logError } from '@/lib/logger';
+import { leaveRequestSchema, validateLeaveDays } from '@/lib/validations';
 
 export interface LeaveBalance {
   id: string;
@@ -104,11 +105,25 @@ export function useLeave() {
   }) => {
     if (!user) return { error: 'Not authenticated' };
 
+    // Validate input
+    const validation = leaveRequestSchema.safeParse(data);
+    if (!validation.success) {
+      const msg = validation.error.issues[0].message;
+      toast.error(msg);
+      return { error: msg };
+    }
+
     const start = new Date(data.startDate);
     const end = data.endDate ? new Date(data.endDate) : start;
     const diffTime = Math.abs(end.getTime() - start.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
     const days = data.isHalfDay ? 0.5 : diffDays;
+
+    const daysError = validateLeaveDays(days);
+    if (daysError) {
+      toast.error(daysError);
+      return { error: daysError };
+    }
 
     const { error } = await supabase.from('leave_requests').insert({
       user_id: user.id,
