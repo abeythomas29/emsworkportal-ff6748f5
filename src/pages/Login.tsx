@@ -10,6 +10,7 @@ import emsLogo from '@/assets/ems-logo.png';
 import { Loader2, Eye, EyeOff, Users, Clock, Calendar, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { lovable } from '@/integrations/lovable';
+import { isNativePlatform, signInWithGoogleNative } from '@/lib/nativeGoogleAuth';
 
 const features = [
   { icon: <Clock className="w-5 h-5" />, text: 'Track work hours & attendance' },
@@ -304,11 +305,21 @@ export default function LoginPage() {
               onClick={async () => {
                 setIsLoading(true);
                 try {
-                  const { error } = await lovable.auth.signInWithOAuth("google", {
-                    redirect_uri: window.location.origin,
-                  });
-                  if (error) {
-                    toast.error('Google sign-in failed', { description: error.message });
+                  if (isNativePlatform()) {
+                    const { error } = await signInWithGoogleNative();
+                    if (error) {
+                      toast.error('Google sign-in failed', { description: error.message });
+                    } else {
+                      toast.success('Welcome!');
+                      navigate('/dashboard');
+                    }
+                  } else {
+                    const { error } = await lovable.auth.signInWithOAuth("google", {
+                      redirect_uri: window.location.origin,
+                    });
+                    if (error) {
+                      toast.error('Google sign-in failed', { description: error.message });
+                    }
                   }
                 } catch (error) {
                   toast.error('An error occurred', { description: 'Please try again later.' });
