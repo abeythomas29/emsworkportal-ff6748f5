@@ -10,6 +10,7 @@ import emsLogo from '@/assets/ems-logo.png';
 import { Loader2, Eye, EyeOff, Users, Clock, Calendar, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { lovable } from '@/integrations/lovable';
+import { isNativePlatform, signInWithGoogleNative } from '@/lib/nativeGoogleAuth';
 
 const features = [
   { icon: <Clock className="w-5 h-5" />, text: 'Track work hours & attendance' },
