@@ -96,7 +96,6 @@ Deno.serve(async (req) => {
     );
   }
 });
-
     if (error) {
       console.error("Error marking absent:", error);
       return new Response(
