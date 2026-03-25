@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { logError } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -64,7 +65,7 @@ export default function PoliciesPage() {
       .order('updated_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching policies:', error);
+      logError('Policies.fetch', error);
     } else {
       setPolicies(data || []);
     }
@@ -78,7 +79,7 @@ export default function PoliciesPage() {
       .single();
 
     if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching leave settings:', error);
+      logError('Policies.fetchLeaveSettings', error);
     } else {
       setLeaveSettings(data);
     }
