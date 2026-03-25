@@ -120,10 +120,17 @@ export function useAttendance() {
 
     setIsCheckingOut(true);
     try {
-      const now = new Date().toISOString();
+      const now = new Date();
+      const checkInTime = new Date(todayAttendance.check_in);
+      if (now <= checkInTime) {
+        toast.error('Check-out time must be after check-in time');
+        setIsCheckingOut(false);
+        return false;
+      }
+
       const { error } = await supabase
         .from('attendance')
-        .update({ check_out: now })
+        .update({ check_out: now.toISOString() })
         .eq('id', todayAttendance.id);
       if (error) throw error;
 
