@@ -305,11 +305,21 @@ export default function LoginPage() {
               onClick={async () => {
                 setIsLoading(true);
                 try {
-                  const { error } = await lovable.auth.signInWithOAuth("google", {
-                    redirect_uri: window.location.origin,
-                  });
-                  if (error) {
-                    toast.error('Google sign-in failed', { description: error.message });
+                  if (isNativePlatform()) {
+                    const { error } = await signInWithGoogleNative();
+                    if (error) {
+                      toast.error('Google sign-in failed', { description: error.message });
+                    } else {
+                      toast.success('Welcome!');
+                      navigate('/dashboard');
+                    }
+                  } else {
+                    const { error } = await lovable.auth.signInWithOAuth("google", {
+                      redirect_uri: window.location.origin,
+                    });
+                    if (error) {
+                      toast.error('Google sign-in failed', { description: error.message });
+                    }
                   }
                 } catch (error) {
                   toast.error('An error occurred', { description: 'Please try again later.' });
