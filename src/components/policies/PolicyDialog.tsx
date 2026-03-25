@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logError } from '@/lib/logger';
+import { policySchema } from '@/lib/validations';
 import {
   Dialog,
   DialogContent,
@@ -55,12 +57,7 @@ export function PolicyDialog({ open, onOpenChange, policy, onSuccess }: PolicyDi
         content: policy.content || '',
       });
     } else {
-      setFormData({
-        title: '',
-        description: '',
-        category: 'General',
-        content: '',
-      });
+      setFormData({ title: '', description: '', category: 'General', content: '' });
     }
   }, [policy]);
 
@@ -68,9 +65,20 @@ export function PolicyDialog({ open, onOpenChange, policy, onSuccess }: PolicyDi
     e.preventDefault();
     setIsLoading(true);
 
+    // Validate input
+    const validation = policySchema.safeParse(formData);
+    if (!validation.success) {
+      toast({
+        title: 'Validation Error',
+        description: validation.error.issues[0].message,
+        variant: 'destructive',
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       if (policy) {
-        // Update existing policy
         const { error } = await supabase
           .from('policies')
           .update({
@@ -83,12 +91,8 @@ export function PolicyDialog({ open, onOpenChange, policy, onSuccess }: PolicyDi
 
         if (error) throw error;
 
-        toast({
-          title: 'Policy Updated',
-          description: 'The policy has been updated successfully.',
-        });
+        toast({ title: 'Policy Updated', description: 'The policy has been updated successfully.' });
       } else {
-        // Create new policy
         const { error } = await supabase.from('policies').insert({
           title: formData.title,
           description: formData.description || null,
@@ -98,18 +102,16 @@ export function PolicyDialog({ open, onOpenChange, policy, onSuccess }: PolicyDi
 
         if (error) throw error;
 
-        toast({
-          title: 'Policy Created',
-          description: 'The policy has been created successfully.',
-        });
+        toast({ title: 'Policy Created', description: 'The policy has been created successfully.' });
       }
 
       onSuccess();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error) {
+      logError('PolicyDialog.submit', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to save policy',
+        description: 'Failed to save policy. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -130,6 +132,7 @@ export function PolicyDialog({ open, onOpenChange, policy, onSuccess }: PolicyDi
               id="title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              maxLength={200}
               required
             />
           </div>
@@ -144,9 +147,7 @@ export function PolicyDialog({ open, onOpenChange, policy, onSuccess }: PolicyDi
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -157,6 +158,7 @@ export function PolicyDialog({ open, onOpenChange, policy, onSuccess }: PolicyDi
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              maxLength={1000}
               rows={2}
             />
           </div>
@@ -166,14 +168,13 @@ export function PolicyDialog({ open, onOpenChange, policy, onSuccess }: PolicyDi
               id="content"
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              maxLength={50000}
               rows={6}
               placeholder="Enter the full policy details..."
             />
           </div>
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {policy ? 'Update' : 'Create'} Policy
