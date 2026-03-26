@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Cake, Calendar, Loader2 } from 'lucide-react';
+import { Cake, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function ProfileCompletionDialog() {
@@ -19,7 +19,6 @@ export function ProfileCompletionDialog() {
   const [isOpen, setIsOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [birthday, setBirthday] = useState('');
-  const [joiningDate, setJoiningDate] = useState('');
 
   const needsBirthday = !profile?.birthday;
 
@@ -27,24 +26,16 @@ export function ProfileCompletionDialog() {
   if (!profile || !needsBirthday) return null;
 
   const handleSubmit = async () => {
-    if (needsBirthday && !birthday) {
+    if (!birthday) {
       toast.error('Please enter your birthday');
-      return;
-    }
-    if (needsJoiningDate && !joiningDate) {
-      toast.error('Please enter your joining date');
       return;
     }
 
     setIsLoading(true);
     try {
-      const updates: Record<string, string> = {};
-      if (needsBirthday && birthday) updates.birthday = birthday;
-      if (needsJoiningDate && joiningDate) updates.joining_date = joiningDate;
-
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update({ birthday })
         .eq('id', profile.id);
 
       if (error) throw error;
@@ -84,20 +75,6 @@ export function ProfileCompletionDialog() {
                 value={birthday}
                 onChange={(e) => setBirthday(e.target.value)}
                 max={new Date().toISOString().split('T')[0]}
-              />
-            </div>
-          )}
-          {needsJoiningDate && (
-            <div className="space-y-2">
-              <Label htmlFor="joining-date" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                Joining Date
-              </Label>
-              <Input
-                id="joining-date"
-                type="date"
-                value={joiningDate}
-                onChange={(e) => setJoiningDate(e.target.value)}
               />
             </div>
           )}
