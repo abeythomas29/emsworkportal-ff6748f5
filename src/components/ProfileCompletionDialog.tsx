@@ -22,10 +22,9 @@ export function ProfileCompletionDialog() {
   const [joiningDate, setJoiningDate] = useState('');
 
   const needsBirthday = !profile?.birthday;
-  const needsJoiningDate = !profile?.joining_date;
 
   // Don't show if profile is complete
-  if (!profile || (!needsBirthday && !needsJoiningDate)) return null;
+  if (!profile || !needsBirthday) return null;
 
   const handleSubmit = async () => {
     if (needsBirthday && !birthday) {
