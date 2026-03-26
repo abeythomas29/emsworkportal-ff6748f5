@@ -314,8 +314,8 @@ export default function LoginPage() {
                       navigate('/dashboard');
                     }
                   } else {
-                    const { error } = await lovable.auth.signInWithOAuth("google", {
-                      redirect_uri: window.location.origin,
+                     const { error } = await lovable.auth.signInWithOAuth("google", {
+                       redirect_uri: `${window.location.origin}/login`,
                     });
                     if (error) {
                       toast.error('Google sign-in failed', { description: error.message });
