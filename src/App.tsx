@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 
 // Pages
 import LoginPage from "./pages/Login";
+import Index from "./pages/Index";
 import DashboardPage from "./pages/Dashboard";
 import AttendancePage from "./pages/Attendance";
 import WorkHoursPage from "./pages/WorkHours";
@@ -33,7 +34,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Index />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/attendance" element={<AttendancePage />} />
