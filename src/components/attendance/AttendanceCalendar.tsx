@@ -123,8 +123,10 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
         mode="multiple"
         month={currentMonth}
         onMonthChange={setCurrentMonth}
-        selected={[...presentDates, ...absentDates, ...halfDayDates, ...allLeaveDates, ...holidayDates]}
         className="rounded-md border pointer-events-auto"
+        classNames={{
+          day_selected: '',
+        }}
         modifiers={{
           present: presentDates,
           absent: absentDates,
@@ -133,11 +135,11 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
           holiday: holidayDates,
         }}
         modifiersClassNames={{
-          present: 'bg-green-500/20 text-green-700 dark:text-green-400 hover:bg-green-500/30',
-          absent: 'bg-red-500/20 text-red-700 dark:text-red-400 hover:bg-red-500/30',
-          halfDay: 'bg-orange-500/20 text-orange-700 dark:text-orange-400 hover:bg-orange-500/30',
-          leave: 'bg-blue-500/20 text-blue-700 dark:text-blue-400 hover:bg-blue-500/30',
-          holiday: 'bg-purple-500/20 text-purple-700 dark:text-purple-400 hover:bg-purple-500/30',
+          present: '!bg-green-500/20 !text-green-700 dark:!text-green-400',
+          absent: '!bg-red-500/20 !text-red-700 dark:!text-red-400',
+          halfDay: '!bg-orange-500/20 !text-orange-700 dark:!text-orange-400',
+          leave: '!bg-blue-500/20 !text-blue-700 dark:!text-blue-400',
+          holiday: '!bg-purple-500/20 !text-purple-700 dark:!text-purple-400',
         }}
         disabled
       />
