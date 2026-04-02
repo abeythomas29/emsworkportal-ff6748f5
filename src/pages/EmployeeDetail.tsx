@@ -167,6 +167,10 @@ export default function EmployeeDetailPage() {
     }
   };
 
+  if (isUnauthorized) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   if (isLoading) {
     return (
       <DashboardLayout>
