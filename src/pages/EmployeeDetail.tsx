@@ -74,6 +74,7 @@ export default function EmployeeDetailPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<EmployeeProfile | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [holidays, setHolidays] = useState<{ date: string; name: string }[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
