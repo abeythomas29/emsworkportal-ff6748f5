@@ -81,10 +81,7 @@ export default function EmployeeDetailPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isEditProfileDialogOpen, setIsEditProfileDialogOpen] = useState(false);
 
-  // Only admin and manager can access
-  if (role !== 'admin' && role !== 'manager') {
-    return <Navigate to="/dashboard" replace />;
-  }
+  const isUnauthorized = role !== 'admin' && role !== 'manager';
 
   useEffect(() => {
     if (!id) return;
