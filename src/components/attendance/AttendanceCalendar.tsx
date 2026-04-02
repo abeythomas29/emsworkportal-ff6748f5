@@ -1,5 +1,8 @@
+import { useState, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { format, isSameMonth } from 'date-fns';
 
 interface AttendanceRecord {
   date: string;
@@ -11,42 +14,122 @@ interface Holiday {
   name: string;
 }
 
+interface LeaveRequest {
+  id: string;
+  leave_type: string;
+  start_date: string;
+  end_date: string;
+  days: number;
+  status: string;
+}
+
 interface AttendanceCalendarProps {
   attendance: AttendanceRecord[];
   holidays?: Holiday[];
+  leaveRequests?: LeaveRequest[];
   className?: string;
 }
 
-export function AttendanceCalendar({ attendance, holidays = [], className }: AttendanceCalendarProps) {
+export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = [], className }: AttendanceCalendarProps) {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
   const holidayDates = holidays.map((h) => new Date(h.date + 'T00:00:00'));
 
   const presentDates = attendance
     .filter((r) => r.status === 'present')
-    .map((r) => new Date(r.date));
+    .map((r) => new Date(r.date + 'T00:00:00'));
   
   const absentDates = attendance
     .filter((r) => r.status === 'absent')
-    .map((r) => new Date(r.date));
+    .map((r) => new Date(r.date + 'T00:00:00'));
 
   const halfDayDates = attendance
     .filter((r) => r.status === 'half_day')
-    .map((r) => new Date(r.date));
+    .map((r) => new Date(r.date + 'T00:00:00'));
 
-  const leaveDates = attendance
-    .filter((r) => r.status === 'leave')
-    .map((r) => new Date(r.date));
+  // Build leave dates from approved leave requests
+  const leaveDatesFromRequests = useMemo(() => {
+    const dates: Date[] = [];
+    leaveRequests
+      .filter((lr) => lr.status === 'approved')
+      .forEach((lr) => {
+        const start = new Date(lr.start_date + 'T00:00:00');
+        const end = new Date(lr.end_date + 'T00:00:00');
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          dates.push(new Date(d));
+        }
+      });
+    return dates;
+  }, [leaveRequests]);
+
+  // Also include leave status from attendance records
+  const leaveFromAttendance = attendance
+    .filter((r) => r.status === 'leave' || r.status === 'lwp')
+    .map((r) => new Date(r.date + 'T00:00:00'));
+
+  const allLeaveDates = [...leaveDatesFromRequests, ...leaveFromAttendance];
+
+  // Monthly summary
+  const monthlySummary = useMemo(() => {
+    const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    
+    let presentCount = 0;
+    let absentCount = 0;
+    let halfDayCount = 0;
+    let clUsed = 0;
+    let elUsed = 0;
+    let lwpCount = 0;
+    let holidayCount = 0;
+
+    // Count from attendance records
+    attendance.forEach((r) => {
+      const d = new Date(r.date + 'T00:00:00');
+      if (!isSameMonth(d, monthStart)) return;
+      if (r.status === 'present') presentCount++;
+      else if (r.status === 'absent') absentCount++;
+      else if (r.status === 'half_day') halfDayCount++;
+      else if (r.status === 'lwp') lwpCount++;
+    });
+
+    // Count from approved leave requests
+    leaveRequests
+      .filter((lr) => lr.status === 'approved')
+      .forEach((lr) => {
+        const start = new Date(lr.start_date + 'T00:00:00');
+        const end = new Date(lr.end_date + 'T00:00:00');
+        let daysInMonth = 0;
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          if (isSameMonth(d, monthStart)) daysInMonth++;
+        }
+        if (daysInMonth > 0) {
+          if (lr.leave_type === 'casual') clUsed += daysInMonth;
+          else if (lr.leave_type === 'earned') elUsed += daysInMonth;
+          else if (lr.leave_type === 'lwp') lwpCount += daysInMonth;
+        }
+      });
+
+    // Count holidays in month
+    holidays.forEach((h) => {
+      const d = new Date(h.date + 'T00:00:00');
+      if (isSameMonth(d, monthStart)) holidayCount++;
+    });
+
+    return { presentCount, absentCount, halfDayCount, clUsed, elUsed, lwpCount, holidayCount };
+  }, [attendance, leaveRequests, holidays, currentMonth]);
 
   return (
     <div className={cn('space-y-4', className)}>
       <Calendar
         mode="multiple"
-        selected={[...presentDates, ...absentDates, ...halfDayDates, ...leaveDates, ...holidayDates]}
+        month={currentMonth}
+        onMonthChange={setCurrentMonth}
+        selected={[...presentDates, ...absentDates, ...halfDayDates, ...allLeaveDates, ...holidayDates]}
         className="rounded-md border pointer-events-auto"
         modifiers={{
           present: presentDates,
           absent: absentDates,
           halfDay: halfDayDates,
-          leave: leaveDates,
+          leave: allLeaveDates,
           holiday: holidayDates,
         }}
         modifiersClassNames={{
@@ -58,6 +141,47 @@ export function AttendanceCalendar({ attendance, holidays = [], className }: Att
         }}
         disabled
       />
+
+      {/* Monthly Summary */}
+      <Card className="border-border">
+        <CardContent className="p-4">
+          <h4 className="text-sm font-semibold text-foreground mb-3">
+            {format(currentMonth, 'MMMM yyyy')} Summary
+          </h4>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="flex justify-between p-2 rounded bg-green-500/10">
+              <span className="text-muted-foreground">Present</span>
+              <span className="font-semibold text-green-700 dark:text-green-400">{monthlySummary.presentCount}</span>
+            </div>
+            <div className="flex justify-between p-2 rounded bg-red-500/10">
+              <span className="text-muted-foreground">Absent</span>
+              <span className="font-semibold text-red-700 dark:text-red-400">{monthlySummary.absentCount}</span>
+            </div>
+            <div className="flex justify-between p-2 rounded bg-primary/10">
+              <span className="text-muted-foreground">CL Used</span>
+              <span className="font-semibold text-primary">{monthlySummary.clUsed}</span>
+            </div>
+            <div className="flex justify-between p-2 rounded bg-orange-500/10">
+              <span className="text-muted-foreground">LWP</span>
+              <span className="font-semibold text-orange-700 dark:text-orange-400">{monthlySummary.lwpCount}</span>
+            </div>
+            <div className="flex justify-between p-2 rounded bg-blue-500/10">
+              <span className="text-muted-foreground">EL Used</span>
+              <span className="font-semibold text-blue-700 dark:text-blue-400">{monthlySummary.elUsed}</span>
+            </div>
+            <div className="flex justify-between p-2 rounded bg-purple-500/10">
+              <span className="text-muted-foreground">Holidays</span>
+              <span className="font-semibold text-purple-700 dark:text-purple-400">{monthlySummary.holidayCount}</span>
+            </div>
+            {monthlySummary.halfDayCount > 0 && (
+              <div className="flex justify-between p-2 rounded bg-orange-500/10">
+                <span className="text-muted-foreground">Half Day</span>
+                <span className="font-semibold text-orange-700 dark:text-orange-400">{monthlySummary.halfDayCount}</span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-sm">
