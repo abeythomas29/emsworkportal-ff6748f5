@@ -289,7 +289,7 @@ export default function EmployeeDetailPage() {
                   <CardTitle className="text-lg">Attendance Calendar</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <AttendanceCalendar attendance={attendance} />
+                  <AttendanceCalendar attendance={attendance} holidays={holidays} />
                 </CardContent>
               </Card>
 
