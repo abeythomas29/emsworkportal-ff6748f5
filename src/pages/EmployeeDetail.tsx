@@ -74,16 +74,14 @@ export default function EmployeeDetailPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<EmployeeProfile | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [holidays, setHolidays] = useState<{ date: string; name: string }[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isEditProfileDialogOpen, setIsEditProfileDialogOpen] = useState(false);
 
-  // Only admin and manager can access
-  if (role !== 'admin' && role !== 'manager') {
-    return <Navigate to="/dashboard" replace />;
-  }
+  const isUnauthorized = role !== 'admin' && role !== 'manager';
 
   useEffect(() => {
     if (!id) return;
@@ -125,6 +123,13 @@ export default function EmployeeDetailPage() {
 
       setLeaveRequests((leaveData || []) as LeaveRequest[]);
 
+      // Fetch holidays
+      const { data: holidaysData } = await supabase
+        .from('holidays')
+        .select('date, name');
+
+      setHolidays((holidaysData || []) as { date: string; name: string }[]);
+
       // Fetch leave balance
       const { data: balanceData } = await supabase
         .from('leave_balances')
@@ -161,6 +166,10 @@ export default function EmployeeDetailPage() {
       setProfile(data as EmployeeProfile);
     }
   };
+
+  if (isUnauthorized) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   if (isLoading) {
     return (
@@ -281,7 +290,7 @@ export default function EmployeeDetailPage() {
                   <CardTitle className="text-lg">Attendance Calendar</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <AttendanceCalendar attendance={attendance} />
+                  <AttendanceCalendar attendance={attendance} holidays={holidays} />
                 </CardContent>
               </Card>
 
