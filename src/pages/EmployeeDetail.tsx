@@ -125,6 +125,13 @@ export default function EmployeeDetailPage() {
 
       setLeaveRequests((leaveData || []) as LeaveRequest[]);
 
+      // Fetch holidays
+      const { data: holidaysData } = await supabase
+        .from('holidays')
+        .select('date, name');
+
+      setHolidays((holidaysData || []) as { date: string; name: string }[]);
+
       // Fetch leave balance
       const { data: balanceData } = await supabase
         .from('leave_balances')
