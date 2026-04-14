@@ -17,6 +17,7 @@ import {
   X,
   Calculator,
   Timer,
+  IndianRupee,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -99,6 +100,12 @@ const navItems: NavItem[] = [
     path: '/overtime',
     roles: ['admin', 'manager', 'employee'],
     departments: ['production'],
+  },
+  {
+    icon: <IndianRupee size={20} />,
+    label: 'Salary',
+    path: '/salary',
+    roles: ['admin', 'manager'],
   },
   {
     icon: <Settings size={20} />,
