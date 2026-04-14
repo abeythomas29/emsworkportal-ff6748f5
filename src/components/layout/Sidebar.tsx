@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Calculator,
+  Timer,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -27,6 +28,7 @@ interface NavItem {
   path: string;
   roles: string[];
   employeeTypes?: string[];
+  departments?: string[];
 }
 
 const navItems: NavItem[] = [
@@ -92,6 +94,13 @@ const navItems: NavItem[] = [
     roles: ['admin', 'manager', 'employee'],
   },
   {
+    icon: <Timer size={20} />,
+    label: 'Overtime',
+    path: '/overtime',
+    roles: ['admin', 'manager', 'employee'],
+    departments: ['production'],
+  },
+  {
     icon: <Settings size={20} />,
     label: 'Settings',
     path: '/settings',
@@ -127,6 +136,11 @@ export function Sidebar() {
     // Check employee type if specified
     if (item.employeeTypes && user?.employeeType) {
       if (!item.employeeTypes.includes(user.employeeType)) return false;
+    }
+    
+    // Check department if specified (admins/managers bypass this)
+    if (item.departments && role !== 'admin' && role !== 'manager') {
+      if (!user?.department || !item.departments.includes(user.department.toLowerCase())) return false;
     }
     
     // For admins/managers, show work hours even if they're not "online" type
