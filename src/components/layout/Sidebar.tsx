@@ -138,6 +138,11 @@ export function Sidebar() {
       if (!item.employeeTypes.includes(user.employeeType)) return false;
     }
     
+    // Check department if specified (admins/managers bypass this)
+    if (item.departments && role !== 'admin' && role !== 'manager') {
+      if (!user?.department || !item.departments.includes(user.department.toLowerCase())) return false;
+    }
+    
     // For admins/managers, show work hours even if they're not "online" type
     if (item.path === '/work-hours' && (role === 'admin' || role === 'manager')) {
       return true;
