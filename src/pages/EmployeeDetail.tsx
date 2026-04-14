@@ -72,15 +72,26 @@ interface LeaveBalance {
   consecutive_work_days: number;
 }
 
+interface OTRequest {
+  id: string;
+  date: string;
+  ot_type: string;
+  ot_minutes: number;
+  status: string;
+  notes: string | null;
+  created_at: string;
+}
+
 export default function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { role } = useAuth();
+  const { role, user: currentUser } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<EmployeeProfile | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [holidays, setHolidays] = useState<{ date: string; name: string }[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalance | null>(null);
+  const [otRequests, setOtRequests] = useState<OTRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isEditProfileDialogOpen, setIsEditProfileDialogOpen] = useState(false);
