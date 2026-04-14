@@ -334,6 +334,12 @@ export default function EmployeeDetailPage() {
               <Wallet className="w-4 h-4" />
               Leave Balance
             </TabsTrigger>
+            {isProductionEmployee && (
+              <TabsTrigger value="overtime" className="gap-2">
+                <Timer className="w-4 h-4" />
+                Overtime
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="attendance" className="mt-4">
