@@ -192,6 +192,35 @@ export default function EmployeeDetailPage() {
     }
   };
 
+  const handleOTAction = async (otId: string, action: 'approved' | 'rejected') => {
+    if (!currentUser) return;
+    const { error } = await supabase
+      .from('ot_requests')
+      .update({
+        status: action,
+        approved_by: currentUser.id,
+        approved_at: new Date().toISOString(),
+      })
+      .eq('id', otId);
+
+    if (error) {
+      toast.error(`Failed to ${action === 'approved' ? 'approve' : 'reject'} OT request`);
+      return;
+    }
+
+    toast.success(`OT request ${action}`);
+    // Refetch OT requests
+    const { data: otData } = await supabase
+      .from('ot_requests')
+      .select('*')
+      .eq('user_id', id!)
+      .order('date', { ascending: false })
+      .limit(30);
+    setOtRequests((otData || []) as OTRequest[]);
+  };
+
+  const isProductionEmployee = profile?.department?.toLowerCase() === 'production';
+
   if (isUnauthorized) {
     return <Navigate to="/dashboard" replace />;
   }
