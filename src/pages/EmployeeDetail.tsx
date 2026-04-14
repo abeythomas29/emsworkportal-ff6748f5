@@ -154,6 +154,16 @@ export default function EmployeeDetailPage() {
 
       setLeaveBalance(balanceData as LeaveBalance | null);
 
+      // Fetch OT requests (for production employees)
+      const { data: otData } = await supabase
+        .from('ot_requests')
+        .select('*')
+        .eq('user_id', id)
+        .order('date', { ascending: false })
+        .limit(30);
+
+      setOtRequests((otData || []) as OTRequest[]);
+
       setIsLoading(false);
     };
 
