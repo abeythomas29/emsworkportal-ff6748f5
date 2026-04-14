@@ -101,6 +101,12 @@ const navItems: NavItem[] = [
     departments: ['production'],
   },
   {
+    icon: <IndianRupee size={20} />,
+    label: 'Salary',
+    path: '/salary',
+    roles: ['admin', 'manager'],
+  },
+  {
     icon: <Settings size={20} />,
     label: 'Settings',
     path: '/settings',
