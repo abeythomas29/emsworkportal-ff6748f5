@@ -31,7 +31,6 @@ interface EmployeeSalary {
 
 export default function SalaryPage() {
   const { user, role } = useAuth();
-  const isAdminOrManager = role === 'admin' || role === 'manager';
   const isAdmin = role === 'admin';
 
   const [employees, setEmployees] = useState<EmployeeSalary[]>([]);
