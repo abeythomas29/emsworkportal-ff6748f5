@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Calculator,
+  Timer,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -91,6 +92,13 @@ const navItems: NavItem[] = [
     label: 'Calculator',
     path: '/calculator',
     roles: ['admin', 'manager', 'employee'],
+  },
+  {
+    icon: <Timer size={20} />,
+    label: 'Overtime',
+    path: '/overtime',
+    roles: ['admin', 'manager', 'employee'],
+    departments: ['production'],
   },
   {
     icon: <Settings size={20} />,
