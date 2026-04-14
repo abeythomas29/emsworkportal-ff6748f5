@@ -22,8 +22,12 @@ import {
   CalendarDays,
   Wallet,
   Pencil,
+  Timer,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface EmployeeProfile {
   id: string;
