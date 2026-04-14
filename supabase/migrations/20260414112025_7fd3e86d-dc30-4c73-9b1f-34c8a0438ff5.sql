@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ALTER COLUMN base_salary SET DEFAULT 0;
