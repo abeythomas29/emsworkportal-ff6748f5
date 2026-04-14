@@ -15,11 +15,6 @@ export default function OvertimePage() {
   const { otRequests, baseSalary, isLoading: otLoading, submitOTRequest, deleteOTRequest } = useOTRequests();
   const { attendanceHistory, isLoading: attLoading } = useAttendance();
 
-  // Only allow production department
-  if (user && user.department?.toLowerCase() !== 'production') {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   const monthlyStats = useMonthlyOTSummary(
     baseSalary,
     8.5,
@@ -27,6 +22,11 @@ export default function OvertimePage() {
     attendanceHistory,
     otRequests
   );
+
+  // Only allow production department (after all hooks)
+  if (user && user.department?.toLowerCase() !== 'production') {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   if (otLoading || attLoading) {
     return (
@@ -41,7 +41,6 @@ export default function OvertimePage() {
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Overtime Calculator</h1>
@@ -50,7 +49,6 @@ export default function OvertimePage() {
           <OTRequestDialog onSubmit={submitOTRequest} />
         </div>
 
-        {/* Summary + Info */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <OTSummaryCard
             monthlyOTMinutes={monthlyStats.totalMonthlyOTMinutes}
@@ -69,7 +67,6 @@ export default function OvertimePage() {
           />
         </div>
 
-        {/* OT History */}
         <OTHistoryCard otRequests={otRequests} onDelete={deleteOTRequest} />
       </div>
     </DashboardLayout>
