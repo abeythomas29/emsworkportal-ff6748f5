@@ -22,8 +22,12 @@ import {
   CalendarDays,
   Wallet,
   Pencil,
+  Timer,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface EmployeeProfile {
   id: string;
@@ -68,15 +72,26 @@ interface LeaveBalance {
   consecutive_work_days: number;
 }
 
+interface OTRequest {
+  id: string;
+  date: string;
+  ot_type: string;
+  ot_minutes: number;
+  status: string;
+  notes: string | null;
+  created_at: string;
+}
+
 export default function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { role } = useAuth();
+  const { role, user: currentUser } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<EmployeeProfile | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [holidays, setHolidays] = useState<{ date: string; name: string }[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalance | null>(null);
+  const [otRequests, setOtRequests] = useState<OTRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isEditProfileDialogOpen, setIsEditProfileDialogOpen] = useState(false);
@@ -139,6 +154,16 @@ export default function EmployeeDetailPage() {
 
       setLeaveBalance(balanceData as LeaveBalance | null);
 
+      // Fetch OT requests (for production employees)
+      const { data: otData } = await supabase
+        .from('ot_requests')
+        .select('*')
+        .eq('user_id', id)
+        .order('date', { ascending: false })
+        .limit(30);
+
+      setOtRequests((otData || []) as OTRequest[]);
+
       setIsLoading(false);
     };
 
@@ -166,6 +191,35 @@ export default function EmployeeDetailPage() {
       setProfile(data as EmployeeProfile);
     }
   };
+
+  const handleOTAction = async (otId: string, action: 'approved' | 'rejected') => {
+    if (!currentUser) return;
+    const { error } = await supabase
+      .from('ot_requests')
+      .update({
+        status: action,
+        approved_by: currentUser.id,
+        approved_at: new Date().toISOString(),
+      })
+      .eq('id', otId);
+
+    if (error) {
+      toast.error(`Failed to ${action === 'approved' ? 'approve' : 'reject'} OT request`);
+      return;
+    }
+
+    toast.success(`OT request ${action}`);
+    // Refetch OT requests
+    const { data: otData } = await supabase
+      .from('ot_requests')
+      .select('*')
+      .eq('user_id', id!)
+      .order('date', { ascending: false })
+      .limit(30);
+    setOtRequests((otData || []) as OTRequest[]);
+  };
+
+  const isProductionEmployee = profile?.department?.toLowerCase() === 'production';
 
   if (isUnauthorized) {
     return <Navigate to="/dashboard" replace />;
@@ -280,6 +334,12 @@ export default function EmployeeDetailPage() {
               <Wallet className="w-4 h-4" />
               Leave Balance
             </TabsTrigger>
+            {isProductionEmployee && (
+              <TabsTrigger value="overtime" className="gap-2">
+                <Timer className="w-4 h-4" />
+                Overtime
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="attendance" className="mt-4">
@@ -430,6 +490,78 @@ export default function EmployeeDetailPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {isProductionEmployee && (
+            <TabsContent value="overtime" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">OT Requests</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {otRequests.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-6">No OT requests found</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {otRequests.map((req) => {
+                        const mins = req.ot_minutes;
+                        const h = Math.floor(mins / 60);
+                        const m = mins % 60;
+                        const formatted = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                        return (
+                          <div
+                            key={req.id}
+                            className="flex items-center justify-between p-3 rounded-lg border border-border"
+                          >
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {format(new Date(req.date), 'MMM dd, yyyy')} — {req.ot_type === 'before_9am' ? 'Before 9 AM' : 'After 6 PM'}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Duration: {formatted}
+                                {req.notes && ` • ${req.notes}`}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {req.status === 'pending' && role === 'admin' ? (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1 text-green-600 hover:bg-green-500/10"
+                                    onClick={() => handleOTAction(req.id, 'approved')}
+                                  >
+                                    <CheckCircle className="w-4 h-4" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1 text-red-600 hover:bg-red-500/10"
+                                    onClick={() => handleOTAction(req.id, 'rejected')}
+                                  >
+                                    <XCircle className="w-4 h-4" />
+                                    Reject
+                                  </Button>
+                                </>
+                              ) : (
+                                <StatusBadge
+                                  status={
+                                    req.status === 'approved' ? 'approved'
+                                    : req.status === 'rejected' ? 'rejected'
+                                    : 'pending'
+                                  }
+                                />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
 
         <EditLeaveBalanceDialog

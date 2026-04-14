@@ -138,12 +138,17 @@ export function EditProfileDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="department">Department</Label>
-              <Input
-                id="department"
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                maxLength={100}
-              />
+              <Select value={department || ''} onValueChange={setDepartment}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Production">Production</SelectItem>
+                  <SelectItem value="Research">Research</SelectItem>
+                  <SelectItem value="Sales">Sales</SelectItem>
+                  <SelectItem value="Purchase">Purchase</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
