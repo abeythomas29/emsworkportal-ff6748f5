@@ -490,6 +490,78 @@ export default function EmployeeDetailPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {isProductionEmployee && (
+            <TabsContent value="overtime" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">OT Requests</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {otRequests.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-6">No OT requests found</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {otRequests.map((req) => {
+                        const mins = req.ot_minutes;
+                        const h = Math.floor(mins / 60);
+                        const m = mins % 60;
+                        const formatted = h > 0 ? `${h}h ${m}m` : `${m}m`;
+                        return (
+                          <div
+                            key={req.id}
+                            className="flex items-center justify-between p-3 rounded-lg border border-border"
+                          >
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {format(new Date(req.date), 'MMM dd, yyyy')} — {req.ot_type === 'before_9am' ? 'Before 9 AM' : 'After 6 PM'}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Duration: {formatted}
+                                {req.notes && ` • ${req.notes}`}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {req.status === 'pending' && role === 'admin' ? (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1 text-green-600 hover:bg-green-500/10"
+                                    onClick={() => handleOTAction(req.id, 'approved')}
+                                  >
+                                    <CheckCircle className="w-4 h-4" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1 text-red-600 hover:bg-red-500/10"
+                                    onClick={() => handleOTAction(req.id, 'rejected')}
+                                  >
+                                    <XCircle className="w-4 h-4" />
+                                    Reject
+                                  </Button>
+                                </>
+                              ) : (
+                                <StatusBadge
+                                  status={
+                                    req.status === 'approved' ? 'approved'
+                                    : req.status === 'rejected' ? 'rejected'
+                                    : 'pending'
+                                  }
+                                />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
 
         <EditLeaveBalanceDialog
