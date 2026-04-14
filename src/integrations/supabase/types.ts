@@ -241,6 +241,48 @@ export type Database = {
           },
         ]
       }
+      ot_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          ot_minutes: number
+          ot_type: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          ot_minutes: number
+          ot_type: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          ot_minutes?: number
+          ot_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       policies: {
         Row: {
           category: string
@@ -277,6 +319,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          base_salary: number
           birthday: string | null
           created_at: string
           department: string | null
@@ -292,6 +335,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          base_salary?: number
           birthday?: string | null
           created_at?: string
           department?: string | null
@@ -307,6 +351,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          base_salary?: number
           birthday?: string | null
           created_at?: string
           department?: string | null
