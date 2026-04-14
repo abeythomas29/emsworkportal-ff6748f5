@@ -31,7 +31,6 @@ interface EmployeeSalary {
 
 export default function SalaryPage() {
   const { user, role } = useAuth();
-  const isAdminOrManager = role === 'admin' || role === 'manager';
   const isAdmin = role === 'admin';
 
   const [employees, setEmployees] = useState<EmployeeSalary[]>([]);
@@ -176,9 +175,9 @@ export default function SalaryPage() {
   };
 
   useEffect(() => {
-    if (!isAdminOrManager) return;
+    if (!isAdmin) return;
     fetchSalaryData();
-  }, [isAdminOrManager, selectedMonth]);
+  }, [isAdmin, selectedMonth]);
 
   const handleSaveSalary = async (employeeId: string) => {
     const newSalary = parseFloat(editValue);
@@ -221,7 +220,7 @@ export default function SalaryPage() {
     return options;
   }, []);
 
-  if (!isAdminOrManager) {
+  if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 

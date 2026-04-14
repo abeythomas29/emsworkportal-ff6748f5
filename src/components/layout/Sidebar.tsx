@@ -105,7 +105,7 @@ const navItems: NavItem[] = [
     icon: <IndianRupee size={20} />,
     label: 'Salary',
     path: '/salary',
-    roles: ['admin', 'manager'],
+    roles: ['admin'],
   },
   {
     icon: <Settings size={20} />,
