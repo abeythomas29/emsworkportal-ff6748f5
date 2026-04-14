@@ -27,6 +27,7 @@ interface NavItem {
   path: string;
   roles: string[];
   employeeTypes?: string[];
+  departments?: string[];
 }
 
 const navItems: NavItem[] = [
