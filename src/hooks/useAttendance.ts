@@ -134,6 +134,34 @@ export function useAttendance() {
         .eq('id', todayAttendance.id);
       if (error) throw error;
 
+      // Auto-create OT request for production workers who check out after 5:30 PM
+      if (user.department?.toLowerCase() === 'production') {
+        const totalMinutes = now.getHours() * 60 + now.getMinutes();
+        const threshold = 17 * 60 + 30; // 5:30 PM
+        if (totalMinutes > threshold) {
+          const otMinutes = Math.min(totalMinutes - threshold, 30); // Cap at 30 mins for auto OT
+          // Check if auto OT already exists for today
+          const { data: existingOT } = await supabase
+            .from('ot_requests')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('date', today)
+            .eq('ot_type', 'auto_after_530pm');
+          
+          if (!existingOT || existingOT.length === 0) {
+            await supabase
+              .from('ot_requests')
+              .insert({
+                user_id: user.id,
+                date: today,
+                ot_type: 'auto_after_530pm',
+                ot_minutes: otMinutes,
+                notes: `Auto-generated: checked out at ${now.toLocaleTimeString()}`,
+              });
+          }
+        }
+      }
+
       toast.success('Checked out successfully!', { description: `Time: ${new Date().toLocaleTimeString()}` });
       await fetchTodayAttendance();
       return true;

@@ -48,7 +48,9 @@ export const OTHistoryCard = ({ otRequests, onDelete }: OTHistoryCardProps) => {
   };
 
   const getTypeLabel = (type: string) => {
-    return type === 'before_9am' ? 'Before 9 AM' : 'After 6 PM';
+    if (type === 'before_9am') return 'Before 9 AM';
+    if (type === 'auto_after_530pm') return 'Auto (5:30-6 PM)';
+    return 'After 6 PM';
   };
 
   return (

@@ -11,6 +11,7 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { ProfileCompletionDialog } from '@/components/ProfileCompletionDialog';
 import { BirthdayReminders } from '@/components/dashboard/BirthdayReminders';
 import { OnLeaveToday } from '@/components/dashboard/OnLeaveToday';
+import { ProductionOTSummary } from '@/components/dashboard/ProductionOTSummary';
 import {
   Users,
   Clock,
@@ -205,6 +206,13 @@ export default function DashboardPage() {
           <BirthdayReminders />
           <OnLeaveToday />
         </div>
+
+        {/* OT Summary for Production Workers */}
+        {!isAdmin && user?.department?.toLowerCase() === 'production' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ProductionOTSummary />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Check-in/out Card for all employees */}
