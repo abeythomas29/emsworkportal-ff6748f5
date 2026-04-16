@@ -134,30 +134,49 @@ export function useAttendance() {
         .eq('id', todayAttendance.id);
       if (error) throw error;
 
-      // Auto-create OT request for production workers who check out after 5:30 PM
+      // Auto-create OT for production workers on checkout
       if (user.department?.toLowerCase() === 'production') {
         const totalMinutes = now.getHours() * 60 + now.getMinutes();
-        const threshold = 17 * 60 + 30; // 5:30 PM
-        if (totalMinutes > threshold) {
-          const otMinutes = Math.min(totalMinutes - threshold, 30); // Cap at 30 mins for auto OT
+        const fiveThirty = 17 * 60 + 30; // 5:30 PM
+        const sixPM = 18 * 60; // 6:00 PM
+
+        if (totalMinutes > fiveThirty) {
           // Check if auto OT already exists for today
           const { data: existingOT } = await supabase
             .from('ot_requests')
-            .select('id')
+            .select('id, ot_type')
             .eq('user_id', user.id)
             .eq('date', today)
-            .eq('ot_type', 'auto_after_530pm');
-          
-          if (!existingOT || existingOT.length === 0) {
-            await supabase
-              .from('ot_requests')
-              .insert({
-                user_id: user.id,
-                date: today,
-                ot_type: 'auto_after_530pm',
-                ot_minutes: otMinutes,
-                notes: `Auto-generated: checked out at ${now.toLocaleTimeString()}`,
-              });
+            .in('ot_type', ['auto_30min', 'auto_after_6pm']);
+
+          const existingTypes = new Set(existingOT?.map(r => r.ot_type) || []);
+
+          // If checked out at or after 6 PM: auto-approve 30 mins (5:30-6:00)
+          if (totalMinutes >= sixPM && !existingTypes.has('auto_30min')) {
+            await supabase.from('ot_requests').insert({
+              user_id: user.id, date: today, ot_type: 'auto_30min', ot_minutes: 30,
+              status: 'approved', notes: 'Auto-approved: 30 min OT (5:30-6:00 PM)',
+              approved_at: now.toISOString(),
+            });
+          }
+
+          // Extra minutes after 6 PM → pending approval
+          if (totalMinutes > sixPM && !existingTypes.has('auto_after_6pm')) {
+            const extraMinutes = totalMinutes - sixPM;
+            await supabase.from('ot_requests').insert({
+              user_id: user.id, date: today, ot_type: 'auto_after_6pm', ot_minutes: extraMinutes,
+              status: 'pending', notes: `Auto-generated: ${Math.floor(extraMinutes / 60)}h ${extraMinutes % 60}m after 6:00 PM`,
+            });
+          }
+
+          // If checked out between 5:30-6:00 PM, partial auto-approved
+          if (totalMinutes < sixPM && !existingTypes.has('auto_30min')) {
+            const partialMinutes = totalMinutes - fiveThirty;
+            await supabase.from('ot_requests').insert({
+              user_id: user.id, date: today, ot_type: 'auto_30min', ot_minutes: partialMinutes,
+              status: 'approved', notes: `Auto-approved: ${partialMinutes} min OT (5:30 PM - checkout)`,
+              approved_at: now.toISOString(),
+            });
           }
         }
       }
