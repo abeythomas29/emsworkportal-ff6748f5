@@ -181,7 +181,7 @@ export default function OvertimePage() {
                         <div className="space-y-1">
                           <p className="font-medium">{req.employee_name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {format(new Date(req.date), 'dd MMM yyyy')} • {req.ot_type === 'auto_after_530pm' ? 'Auto (5:30-6 PM)' : req.ot_type === 'before_9am' ? 'Before 9 AM' : 'After 6 PM'} • {Math.floor(req.ot_minutes / 60)}h {req.ot_minutes % 60}m
+                            {format(new Date(req.date), 'dd MMM yyyy')} • {req.ot_type === 'auto_30min' ? 'Auto 30min' : req.ot_type === 'auto_after_6pm' ? 'After 6 PM (Auto)' : req.ot_type === 'before_9am' ? 'Before 9 AM' : 'After 6 PM'} • {Math.floor(req.ot_minutes / 60)}h {req.ot_minutes % 60}m
                           </p>
                           {req.notes && <p className="text-xs text-muted-foreground">{req.notes}</p>}
                         </div>
@@ -224,7 +224,7 @@ export default function OvertimePage() {
                           <tr key={req.id} className="border-b last:border-0">
                             <td className="py-2 px-3">{req.employee_name}</td>
                             <td className="py-2 px-3">{format(new Date(req.date), 'dd MMM yyyy')}</td>
-                            <td className="py-2 px-3 capitalize">{req.ot_type === 'auto_after_530pm' ? 'Auto (5:30-6 PM)' : req.ot_type === 'before_9am' ? 'Before 9 AM' : 'After 6 PM'}</td>
+                            <td className="py-2 px-3 capitalize">{req.ot_type === 'auto_30min' ? 'Auto 30min' : req.ot_type === 'auto_after_6pm' ? 'After 6 PM (Auto)' : req.ot_type === 'before_9am' ? 'Before 9 AM' : 'After 6 PM'}</td>
                             <td className="py-2 px-3">{Math.floor(req.ot_minutes / 60)}h {req.ot_minutes % 60}m</td>
                             <td className="py-2 px-3">
                               <Badge variant={req.status === 'approved' ? 'default' : req.status === 'rejected' ? 'destructive' : 'secondary'}>
