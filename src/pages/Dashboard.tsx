@@ -110,17 +110,7 @@ export default function DashboardPage() {
 
         {/* Admin Stats */}
         {isAdmin && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Link to="/employees" className="block">
-              <StatCard
-                title="Total Employees"
-                value={employees.length}
-                subtitle="Registered users"
-                icon={<Users className="w-6 h-6 text-primary" />}
-                variant="primary"
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-              />
-            </Link>
+          <div className="grid grid-cols-1 gap-6">
             <Link to="/leave-requests" className="block">
               <StatCard
                 title="Pending Leaves"
