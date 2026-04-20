@@ -129,10 +129,11 @@ export default function OvertimePage() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Overtime Management</h1>
             <p className="text-muted-foreground">
-              {isAdminOrManager ? 'Manage overtime requests for production workers' : 'Track your overtime hours and earnings'}
+              {isAdminOrManager
+                ? 'Manage overtime requests for production workers'
+                : 'OT is auto-tracked from your check-in/out times. Extra time after 6 PM goes to admin for approval.'}
             </p>
           </div>
-          {isProductionEmployee && <OTRequestDialog onSubmit={submitOTRequest} />}
         </div>
 
         {/* Employee's own OT view */}
