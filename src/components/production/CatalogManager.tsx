@@ -4,23 +4,166 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Pencil, Check, X } from 'lucide-react';
 import {
   useProducts,
   useRawMaterials,
   useCreateProduct,
   useCreateRawMaterial,
+  useUpdateProduct,
+  useUpdateRawMaterial,
   useDeleteProduct,
   useDeleteRawMaterial,
+  type Product,
+  type RawMaterial,
 } from '@/hooks/useProduction';
+
+function ProductRow({ p }: { p: Product }) {
+  const update = useUpdateProduct();
+  const del = useDeleteProduct();
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(p.name);
+  const [unit, setUnit] = useState(p.unit);
+  const [stock, setStock] = useState(String(p.current_stock));
+
+  const save = async () => {
+    if (!name.trim()) return;
+    await update.mutateAsync({
+      id: p.id,
+      name: name.trim(),
+      unit,
+      current_stock: parseFloat(stock) || 0,
+    });
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setName(p.name); setUnit(p.unit); setStock(String(p.current_stock));
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <TableRow>
+        <TableCell><Input value={name} onChange={(e) => setName(e.target.value)} className="h-8" /></TableCell>
+        <TableCell>
+          <div className="flex gap-1">
+            <Input type="number" step="0.01" value={stock} onChange={(e) => setStock(e.target.value)} className="h-8 w-24" />
+            <Select value={unit} onValueChange={setUnit}>
+              <SelectTrigger className="h-8 w-16"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="kg">kg</SelectItem>
+                <SelectItem value="lt">lt</SelectItem>
+                <SelectItem value="pcs">pcs</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="flex gap-1">
+            <Button size="icon" variant="ghost" onClick={save} disabled={update.isPending}><Check className="h-4 w-4" /></Button>
+            <Button size="icon" variant="ghost" onClick={cancel}><X className="h-4 w-4" /></Button>
+          </div>
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  return (
+    <TableRow>
+      <TableCell>{p.name}</TableCell>
+      <TableCell>{Number(p.current_stock).toFixed(2)} {p.unit}</TableCell>
+      <TableCell>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="icon" onClick={() => setEditing(true)}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => del.mutate(p.id)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function RawMaterialRow({ r }: { r: RawMaterial }) {
+  const update = useUpdateRawMaterial();
+  const del = useDeleteRawMaterial();
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(r.name);
+  const [unit, setUnit] = useState<'kg' | 'lt'>(r.unit);
+  const [stock, setStock] = useState(String(r.current_stock));
+
+  const save = async () => {
+    if (!name.trim()) return;
+    await update.mutateAsync({
+      id: r.id,
+      name: name.trim(),
+      unit,
+      current_stock: parseFloat(stock) || 0,
+    });
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setName(r.name); setUnit(r.unit); setStock(String(r.current_stock));
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <TableRow>
+        <TableCell><Input value={name} onChange={(e) => setName(e.target.value)} className="h-8" /></TableCell>
+        <TableCell>
+          <div className="flex gap-1">
+            <Input type="number" step="0.01" value={stock} onChange={(e) => setStock(e.target.value)} className="h-8 w-24" />
+            <Select value={unit} onValueChange={(v) => setUnit(v as 'kg' | 'lt')}>
+              <SelectTrigger className="h-8 w-16"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="kg">kg</SelectItem>
+                <SelectItem value="lt">lt</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="flex gap-1">
+            <Button size="icon" variant="ghost" onClick={save} disabled={update.isPending}><Check className="h-4 w-4" /></Button>
+            <Button size="icon" variant="ghost" onClick={cancel}><X className="h-4 w-4" /></Button>
+          </div>
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  return (
+    <TableRow>
+      <TableCell>{r.name}</TableCell>
+      <TableCell>
+        <span className={r.current_stock < 0 ? 'text-destructive font-semibold' : ''}>
+          {Number(r.current_stock).toFixed(2)} {r.unit}
+        </span>
+      </TableCell>
+      <TableCell>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="icon" onClick={() => setEditing(true)}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => del.mutate(r.id)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 export function CatalogManager() {
   const { data: products = [] } = useProducts();
   const { data: rawMaterials = [] } = useRawMaterials();
   const createProduct = useCreateProduct();
   const createRaw = useCreateRawMaterial();
-  const delProduct = useDeleteProduct();
-  const delRaw = useDeleteRawMaterial();
 
   const [pName, setPName] = useState('');
   const [pStock, setPStock] = useState('');
@@ -49,20 +192,10 @@ export function CatalogManager() {
           </div>
           <Table>
             <TableHeader>
-              <TableRow><TableHead>Name</TableHead><TableHead>Stock</TableHead><TableHead className="w-12" /></TableRow>
+              <TableRow><TableHead>Name</TableHead><TableHead>Stock</TableHead><TableHead className="w-24" /></TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell>{p.name}</TableCell>
-                  <TableCell>{Number(p.current_stock).toFixed(2)} {p.unit}</TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => delProduct.mutate(p.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {products.map((p) => <ProductRow key={p.id} p={p} />)}
               {products.length === 0 && (
                 <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No products yet</TableCell></TableRow>
               )}
@@ -97,24 +230,10 @@ export function CatalogManager() {
           </div>
           <Table>
             <TableHeader>
-              <TableRow><TableHead>Name</TableHead><TableHead>Stock</TableHead><TableHead className="w-12" /></TableRow>
+              <TableRow><TableHead>Name</TableHead><TableHead>Stock</TableHead><TableHead className="w-24" /></TableRow>
             </TableHeader>
             <TableBody>
-              {rawMaterials.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell>{r.name}</TableCell>
-                  <TableCell>
-                    <span className={r.current_stock < 0 ? 'text-destructive font-semibold' : ''}>
-                      {Number(r.current_stock).toFixed(2)} {r.unit}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => delRaw.mutate(r.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {rawMaterials.map((r) => <RawMaterialRow key={r.id} r={r} />)}
               {rawMaterials.length === 0 && (
                 <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No raw materials yet</TableCell></TableRow>
               )}
