@@ -6,7 +6,7 @@ import { useAttendance } from '@/hooks/useAttendance';
 import { useMonthlyOTSummary } from '@/hooks/useOTCalculation';
 import { OTSummaryCard } from '@/components/overtime/OTSummaryCard';
 import { OTHistoryCard } from '@/components/overtime/OTHistoryCard';
-import { OTRequestDialog } from '@/components/overtime/OTRequestDialog';
+
 import { WorkingHoursInfo } from '@/components/overtime/WorkingHoursInfo';
 import { Navigate } from 'react-router-dom';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
@@ -129,10 +129,11 @@ export default function OvertimePage() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Overtime Management</h1>
             <p className="text-muted-foreground">
-              {isAdminOrManager ? 'Manage overtime requests for production workers' : 'Track your overtime hours and earnings'}
+              {isAdminOrManager
+                ? 'Manage overtime requests for production workers'
+                : 'OT is auto-tracked from your check-in/out times. Extra time after 6 PM goes to admin for approval.'}
             </p>
           </div>
-          {isProductionEmployee && <OTRequestDialog onSubmit={submitOTRequest} />}
         </div>
 
         {/* Employee's own OT view */}
@@ -181,7 +182,7 @@ export default function OvertimePage() {
                         <div className="space-y-1">
                           <p className="font-medium">{req.employee_name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {format(new Date(req.date), 'dd MMM yyyy')} • {req.ot_type === 'auto_30min' ? 'Auto 30min' : req.ot_type === 'auto_after_6pm' ? 'After 6 PM (Auto)' : req.ot_type === 'before_9am' ? 'Before 9 AM' : 'After 6 PM'} • {Math.floor(req.ot_minutes / 60)}h {req.ot_minutes % 60}m
+                            {format(new Date(req.date), 'dd MMM yyyy')} • {req.ot_type === 'auto_30min' ? 'Auto 30min' : req.ot_type === 'auto_after_6pm' ? 'After 6 PM (Auto)' : req.ot_type === 'auto_before_9am' ? 'Before 9 AM (Auto)' : req.ot_type === 'before_9am' ? 'Before 9 AM' : 'After 6 PM'} • {Math.floor(req.ot_minutes / 60)}h {req.ot_minutes % 60}m
                           </p>
                           {req.notes && <p className="text-xs text-muted-foreground">{req.notes}</p>}
                         </div>
@@ -224,7 +225,7 @@ export default function OvertimePage() {
                           <tr key={req.id} className="border-b last:border-0">
                             <td className="py-2 px-3">{req.employee_name}</td>
                             <td className="py-2 px-3">{format(new Date(req.date), 'dd MMM yyyy')}</td>
-                            <td className="py-2 px-3 capitalize">{req.ot_type === 'auto_30min' ? 'Auto 30min' : req.ot_type === 'auto_after_6pm' ? 'After 6 PM (Auto)' : req.ot_type === 'before_9am' ? 'Before 9 AM' : 'After 6 PM'}</td>
+                            <td className="py-2 px-3 capitalize">{req.ot_type === 'auto_30min' ? 'Auto 30min' : req.ot_type === 'auto_after_6pm' ? 'After 6 PM (Auto)' : req.ot_type === 'auto_before_9am' ? 'Before 9 AM (Auto)' : req.ot_type === 'before_9am' ? 'Before 9 AM' : 'After 6 PM'}</td>
                             <td className="py-2 px-3">{Math.floor(req.ot_minutes / 60)}h {req.ot_minutes % 60}m</td>
                             <td className="py-2 px-3">
                               <Badge variant={req.status === 'approved' ? 'default' : req.status === 'rejected' ? 'destructive' : 'secondary'}>
