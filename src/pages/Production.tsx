@@ -152,7 +152,7 @@ export default function ProductionPage() {
             </div>
           </TabsContent>
 
-          {isAdmin && (
+          {canManageCatalog && (
             <TabsContent value="catalog">
               <CatalogManager />
             </TabsContent>
