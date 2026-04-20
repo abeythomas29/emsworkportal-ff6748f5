@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSalesStats } from '@/hooks/useSales';
 import { Link } from 'react-router-dom';
-import { ArrowRight, IndianRupee, FileText, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowRight, IndianRupee, FileText, Loader2 } from 'lucide-react';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 function formatCurrency(value: number) {
@@ -35,24 +35,25 @@ export function SalesOverviewWidget() {
         ) : (
           <div className="space-y-6">
             {/* KPIs */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                <p className="text-xs text-muted-foreground mb-1">This Month Revenue</p>
-                <p className="text-xl font-bold text-foreground">{formatCurrency(data.this_month.revenue)}</p>
-              </div>
-              <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/20">
-                <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><FileText className="w-3 h-3" /> Invoices</p>
-                <p className="text-xl font-bold text-foreground">{data.this_month.invoices}</p>
-              </div>
-              <div className="p-4 rounded-lg bg-warning/10 border border-warning/20">
-                <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Outstanding</p>
-                <p className="text-xl font-bold text-foreground">{formatCurrency(data.this_month.outstanding)}</p>
-              </div>
-              <div className="p-4 rounded-lg bg-muted border border-border">
-                <p className="text-xs text-muted-foreground mb-1">Top Customer</p>
-                <p className="text-sm font-semibold text-foreground truncate" title={data.this_month.top_customer || ''}>
-                  {data.this_month.top_customer || '—'}
-                </p>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
+                Showing {data.latest_month_label}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                  <p className="text-xs text-muted-foreground mb-1">Total Revenue</p>
+                  <p className="text-xl font-bold text-foreground">{formatCurrency(data.this_month.revenue)}</p>
+                </div>
+                <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/20">
+                  <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><FileText className="w-3 h-3" /> Invoices</p>
+                  <p className="text-xl font-bold text-foreground">{data.this_month.invoices}</p>
+                </div>
+                <div className="p-4 rounded-lg bg-muted border border-border">
+                  <p className="text-xs text-muted-foreground mb-1">Top Customer</p>
+                  <p className="text-sm font-semibold text-foreground truncate" title={data.this_month.top_customer || ''}>
+                    {data.this_month.top_customer || '—'}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -81,7 +82,7 @@ export function SalesOverviewWidget() {
 
             {/* Top products */}
             <div>
-              <p className="text-sm font-medium text-foreground mb-2">Top Products — This Month</p>
+              <p className="text-sm font-medium text-foreground mb-2">Top Products — {data.latest_month_label}</p>
               {data.top_products.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-2">No items sold this month yet.</p>
               ) : (

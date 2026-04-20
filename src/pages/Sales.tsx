@@ -112,8 +112,6 @@ export default function SalesPage() {
                       <TableHead>Customer</TableHead>
                       <TableHead>Payment</TableHead>
                       <TableHead className="text-right">Total</TableHead>
-                      <TableHead className="text-right">Received</TableHead>
-                      <TableHead className="text-right">Due</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -125,15 +123,11 @@ export default function SalesPage() {
                         <TableCell className="max-w-[240px] truncate" title={inv.party_name}>{inv.party_name}</TableCell>
                         <TableCell>{inv.payment_type || '—'}</TableCell>
                         <TableCell className="text-right font-medium">{formatCurrency(Number(inv.total_amount))}</TableCell>
-                        <TableCell className="text-right text-success">{formatCurrency(Number(inv.received_amount))}</TableCell>
-                        <TableCell className="text-right text-warning">{formatCurrency(Number(inv.balance_due))}</TableCell>
                         <TableCell>
                           {inv.is_cancelled ? (
                             <Badge variant="destructive">Cancelled</Badge>
-                          ) : Number(inv.balance_due) > 0 ? (
-                            <Badge variant="outline" className="text-warning border-warning">Pending</Badge>
                           ) : (
-                            <Badge variant="outline" className="text-success border-success">Paid</Badge>
+                            <Badge variant="outline" className="text-success border-success">Completed</Badge>
                           )}
                         </TableCell>
                       </TableRow>

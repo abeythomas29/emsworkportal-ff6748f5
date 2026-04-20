@@ -6,10 +6,11 @@ import { toast } from 'sonner';
 import { logError } from '@/lib/logger';
 
 export interface SalesDashboardStats {
+  latest_month: string;
+  latest_month_label: string;
   this_month: {
     revenue: number;
     invoices: number;
-    outstanding: number;
     top_customer: string | null;
   };
   trend: Array<{ month: string; label: string; revenue: number; invoices: number }>;
