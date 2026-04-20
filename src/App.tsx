@@ -25,6 +25,7 @@ import CalculatorPage from "./pages/Calculator";
 import OvertimePage from "./pages/Overtime";
 import SalaryPage from "./pages/Salary";
 import PrivacyPolicyPage from "./pages/PrivacyPolicy";
+import ProductionPage from "./pages/Production";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/overtime" element={<OvertimePage />} />
             <Route path="/salary" element={<SalaryPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/production" element={<ProductionPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
