@@ -507,6 +507,180 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_invoices: {
+        Row: {
+          balance_due: number
+          created_at: string
+          id: string
+          invoice_date: string
+          invoice_no: string
+          is_cancelled: boolean
+          party_name: string
+          payment_type: string | null
+          received_amount: number
+          total_amount: number
+          transaction_type: string | null
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          balance_due?: number
+          created_at?: string
+          id?: string
+          invoice_date: string
+          invoice_no: string
+          is_cancelled?: boolean
+          party_name: string
+          payment_type?: string | null
+          received_amount?: number
+          total_amount?: number
+          transaction_type?: string | null
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          balance_due?: number
+          created_at?: string
+          id?: string
+          invoice_date?: string
+          invoice_no?: string
+          is_cancelled?: boolean
+          party_name?: string
+          payment_type?: string | null
+          received_amount?: number
+          total_amount?: number
+          transaction_type?: string | null
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      sales_items: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          description: string | null
+          discount: number
+          discount_percent: number
+          hsn_sac: string | null
+          id: string
+          invoice_date: string
+          invoice_id: string
+          invoice_no: string
+          item_name: string
+          party_name: string
+          product_id: string | null
+          quantity: number
+          stock_deducted: boolean
+          tax: number
+          tax_percent: number
+          unit: string | null
+          unit_price: number
+        }
+        Insert: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          discount?: number
+          discount_percent?: number
+          hsn_sac?: string | null
+          id?: string
+          invoice_date: string
+          invoice_id: string
+          invoice_no: string
+          item_name: string
+          party_name: string
+          product_id?: string | null
+          quantity?: number
+          stock_deducted?: boolean
+          tax?: number
+          tax_percent?: number
+          unit?: string | null
+          unit_price?: number
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          discount?: number
+          discount_percent?: number
+          hsn_sac?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_id?: string
+          invoice_no?: string
+          item_name?: string
+          party_name?: string
+          product_id?: string | null
+          quantity?: number
+          stock_deducted?: boolean
+          tax?: number
+          tax_percent?: number
+          unit?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "sales_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_uploads: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          invoices_inserted: number
+          invoices_skipped: number
+          items_inserted: number
+          items_matched_to_products: number
+          notes: string | null
+          stock_deducted_total: number
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          invoices_inserted?: number
+          invoices_skipped?: number
+          items_inserted?: number
+          items_matched_to_products?: number
+          notes?: string | null
+          stock_deducted_total?: number
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          invoices_inserted?: number
+          invoices_skipped?: number
+          items_inserted?: number
+          items_matched_to_products?: number
+          notes?: string | null
+          stock_deducted_total?: number
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -571,6 +745,7 @@ export type Database = {
     Functions: {
       accrue_earned_leave: { Args: never; Returns: undefined }
       cap_earned_leave_year_end: { Args: never; Returns: undefined }
+      get_sales_dashboard_stats: { Args: never; Returns: Json }
       get_upcoming_birthdays: {
         Args: never
         Returns: {
