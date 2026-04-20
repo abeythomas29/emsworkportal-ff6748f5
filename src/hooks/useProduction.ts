@@ -153,6 +153,38 @@ export function useCreateRawMaterial() {
   });
 }
 
+export function useUpdateProduct() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; name?: string; unit?: string; current_stock?: number }) => {
+      const { id, ...patch } = input;
+      const { error } = await supabase.from('products').update(patch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['products'] });
+      toast({ title: 'Product updated' });
+    },
+    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+}
+
+export function useUpdateRawMaterial() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; name?: string; unit?: 'kg' | 'lt'; current_stock?: number }) => {
+      const { id, ...patch } = input;
+      const { error } = await supabase.from('raw_materials').update(patch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['raw_materials'] });
+      toast({ title: 'Raw material updated' });
+    },
+    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+}
+
 export function useDeleteProduct() {
   const qc = useQueryClient();
   return useMutation({
