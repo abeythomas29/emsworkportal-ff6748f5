@@ -316,6 +316,116 @@ export type Database = {
         }
         Relationships: []
       }
+      production_log_materials: {
+        Row: {
+          created_at: string
+          id: string
+          production_log_id: string
+          quantity_consumed: number
+          raw_material_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          production_log_id: string
+          quantity_consumed: number
+          raw_material_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          production_log_id?: string
+          quantity_consumed?: number
+          raw_material_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_log_materials_production_log_id_fkey"
+            columns: ["production_log_id"]
+            isOneToOne: false
+            referencedRelation: "production_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_log_materials_raw_material_id_fkey"
+            columns: ["raw_material_id"]
+            isOneToOne: false
+            referencedRelation: "raw_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_logs: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          product_id: string
+          quantity_produced: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          product_id: string
+          quantity_produced: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          product_id?: string
+          quantity_produced?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_logs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          current_stock: number
+          id: string
+          is_active: boolean
+          name: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_stock?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_stock?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -363,6 +473,36 @@ export type Database = {
           is_active?: boolean | null
           joining_date?: string | null
           phone_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      raw_materials: {
+        Row: {
+          created_at: string
+          current_stock: number
+          id: string
+          is_active: boolean
+          name: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_stock?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_stock?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          unit?: string
           updated_at?: string
         }
         Relationships: []
@@ -456,6 +596,7 @@ export type Database = {
             }
             Returns: boolean
           }
+      is_production_user: { Args: { _user_id: string }; Returns: boolean }
       mark_absent_for_missing_checkins: {
         Args: { target_date?: string }
         Returns: number
