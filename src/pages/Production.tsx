@@ -17,8 +17,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 
 export default function ProductionPage() {
-  const { role } = useAuth();
+  const { role, profile } = useAuth();
   const isAdmin = role === 'admin';
+  const isProduction = (profile?.department || '').toLowerCase() === 'production';
+  const canManageCatalog = isAdmin || isProduction;
   const { data: products = [] } = useProducts();
   const { data: rawMaterials = [] } = useRawMaterials();
   const { data: logs = [], isLoading } = useProductionLogs();
