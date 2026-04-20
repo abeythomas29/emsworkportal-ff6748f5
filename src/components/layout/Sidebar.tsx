@@ -19,6 +19,7 @@ import {
   Timer,
   IndianRupee,
   Factory,
+  TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -113,6 +114,12 @@ const navItems: NavItem[] = [
     icon: <IndianRupee size={20} />,
     label: 'Salary',
     path: '/salary',
+    roles: ['admin'],
+  },
+  {
+    icon: <TrendingUp size={20} />,
+    label: 'Sales',
+    path: '/sales',
     roles: ['admin'],
   },
   {

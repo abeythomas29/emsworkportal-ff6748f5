@@ -13,6 +13,7 @@ import { BirthdayReminders } from '@/components/dashboard/BirthdayReminders';
 import { OnLeaveToday } from '@/components/dashboard/OnLeaveToday';
 import { ProductionOTSummary } from '@/components/dashboard/ProductionOTSummary';
 import { ProductionTodayWidget } from '@/components/dashboard/ProductionTodayWidget';
+import { SalesOverviewWidget } from '@/components/dashboard/SalesOverviewWidget';
 import {
   Users,
   Clock,
@@ -212,6 +213,13 @@ export default function DashboardPage() {
         {isAdmin && (
           <div className="grid grid-cols-1 gap-6">
             <ProductionTodayWidget />
+          </div>
+        )}
+
+        {/* Sales Overview (admin only) */}
+        {role === 'admin' && (
+          <div className="grid grid-cols-1 gap-6">
+            <SalesOverviewWidget />
           </div>
         )}
 
