@@ -79,7 +79,7 @@ export function ProductionTodayWidget() {
         {/* Low stock raw materials */}
         <div>
           <div className="flex items-center gap-2 mb-2 text-sm font-medium text-muted-foreground">
-            <AlertTriangle className="w-4 h-4 text-amber-500" /> Low Stock (&lt; {LOW_STOCK_THRESHOLD})
+            <AlertTriangle className="w-4 h-4 text-warning" /> Low Stock (&lt; {LOW_STOCK_THRESHOLD})
           </div>
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Loading...</p>
@@ -98,7 +98,7 @@ export function ProductionTodayWidget() {
                     <span className="font-medium">{r.name}</span>
                     <Badge
                       variant={negative ? 'destructive' : 'outline'}
-                      className={!negative ? 'border-amber-500 text-amber-600 dark:text-amber-400' : ''}
+                      className={!negative ? 'border-warning text-warning' : ''}
                     >
                       {stock.toFixed(2)} {r.unit}
                     </Badge>
