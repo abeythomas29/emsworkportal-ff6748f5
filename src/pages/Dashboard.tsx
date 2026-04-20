@@ -12,6 +12,7 @@ import { ProfileCompletionDialog } from '@/components/ProfileCompletionDialog';
 import { BirthdayReminders } from '@/components/dashboard/BirthdayReminders';
 import { OnLeaveToday } from '@/components/dashboard/OnLeaveToday';
 import { ProductionOTSummary } from '@/components/dashboard/ProductionOTSummary';
+import { ProductionTodayWidget } from '@/components/dashboard/ProductionTodayWidget';
 import {
   Users,
   Clock,
@@ -206,6 +207,13 @@ export default function DashboardPage() {
           <BirthdayReminders />
           <OnLeaveToday />
         </div>
+
+        {/* Production Today (admin/manager) */}
+        {isAdmin && (
+          <div className="grid grid-cols-1 gap-6">
+            <ProductionTodayWidget />
+          </div>
+        )}
 
         {/* OT Summary for Production Workers */}
         {!isAdmin && user?.department?.toLowerCase() === 'production' && (
