@@ -17,8 +17,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 
 export default function ProductionPage() {
-  const { role } = useAuth();
+  const { role, profile } = useAuth();
   const isAdmin = role === 'admin';
+  const isProduction = (profile?.department || '').toLowerCase() === 'production';
+  const canManageCatalog = isAdmin || isProduction;
   const { data: products = [] } = useProducts();
   const { data: rawMaterials = [] } = useRawMaterials();
   const { data: logs = [], isLoading } = useProductionLogs();
@@ -42,7 +44,7 @@ export default function ProductionPage() {
           <TabsList>
             <TabsTrigger value="logs">Production Log</TabsTrigger>
             <TabsTrigger value="inventory">Inventory</TabsTrigger>
-            {isAdmin && <TabsTrigger value="catalog">Manage Catalog</TabsTrigger>}
+            {canManageCatalog && <TabsTrigger value="catalog">Manage Catalog</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="logs" className="space-y-4">
@@ -150,7 +152,7 @@ export default function ProductionPage() {
             </div>
           </TabsContent>
 
-          {isAdmin && (
+          {canManageCatalog && (
             <TabsContent value="catalog">
               <CatalogManager />
             </TabsContent>
