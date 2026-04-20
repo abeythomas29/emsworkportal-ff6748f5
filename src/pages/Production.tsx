@@ -44,7 +44,7 @@ export default function ProductionPage() {
           <TabsList>
             <TabsTrigger value="logs">Production Log</TabsTrigger>
             <TabsTrigger value="inventory">Inventory</TabsTrigger>
-            {isAdmin && <TabsTrigger value="catalog">Manage Catalog</TabsTrigger>}
+            {canManageCatalog && <TabsTrigger value="catalog">Manage Catalog</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="logs" className="space-y-4">
