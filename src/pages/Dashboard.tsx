@@ -110,7 +110,7 @@ export default function DashboardPage() {
 
         {/* Admin Stats */}
         {isAdmin && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Link to="/employees" className="block">
               <StatCard
                 title="Total Employees"
@@ -128,26 +128,6 @@ export default function DashboardPage() {
                 subtitle="Awaiting approval"
                 icon={<Calendar className="w-6 h-6 text-warning" />}
                 variant="warning"
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-              />
-            </Link>
-            <Link to="/attendance" className="block">
-              <StatCard
-                title="Days Worked"
-                value={daysWorkedThisMonth}
-                subtitle="This month (you)"
-                icon={<CheckCircle2 className="w-6 h-6 text-success" />}
-                variant="success"
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-              />
-            </Link>
-            <Link to="/work-hours" className="block">
-              <StatCard
-                title="Hours Logged"
-                value={totalHoursThisMonth.toFixed(1)}
-                subtitle="This month (you)"
-                icon={<Clock className="w-6 h-6 text-info" />}
-                variant="default"
                 className="cursor-pointer hover:shadow-lg transition-shadow"
               />
             </Link>
