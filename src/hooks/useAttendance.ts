@@ -136,46 +136,56 @@ export function useAttendance() {
 
       // Auto-create OT for production workers on checkout
       if (user.department?.toLowerCase() === 'production') {
-        const totalMinutes = now.getHours() * 60 + now.getMinutes();
-        const fiveThirty = 17 * 60 + 30; // 5:30 PM
-        const sixPM = 18 * 60; // 6:00 PM
+        const checkInDate = new Date(todayAttendance.check_in);
+        const checkInMinutes = checkInDate.getHours() * 60 + checkInDate.getMinutes();
+        const checkOutMinutes = now.getHours() * 60 + now.getMinutes();
+        const nineAM = 9 * 60;
+        const fiveThirty = 17 * 60 + 30;
+        const sixPM = 18 * 60;
 
-        if (totalMinutes > fiveThirty) {
-          // Check if auto OT already exists for today
-          const { data: existingOT } = await supabase
-            .from('ot_requests')
-            .select('id, ot_type')
-            .eq('user_id', user.id)
-            .eq('date', today)
-            .in('ot_type', ['auto_30min', 'auto_after_6pm']);
+        // Look up any existing auto-OT for today
+        const { data: existingOT } = await supabase
+          .from('ot_requests')
+          .select('id, ot_type')
+          .eq('user_id', user.id)
+          .eq('date', today)
+          .in('ot_type', ['auto_30min', 'auto_after_6pm', 'auto_before_9am']);
+        const existingTypes = new Set(existingOT?.map(r => r.ot_type) || []);
 
-          const existingTypes = new Set(existingOT?.map(r => r.ot_type) || []);
+        // Before-9-AM OT → pending approval
+        if (checkInMinutes < nineAM && !existingTypes.has('auto_before_9am')) {
+          const earlyMinutes = nineAM - checkInMinutes;
+          await supabase.from('ot_requests').insert({
+            user_id: user.id, date: today, ot_type: 'auto_before_9am', ot_minutes: earlyMinutes,
+            status: 'pending',
+            notes: `Auto-generated: ${Math.floor(earlyMinutes / 60)}h ${earlyMinutes % 60}m before 9:00 AM`,
+          });
+        }
 
-          // If checked out at or after 6 PM: auto-approve 30 mins (5:30-6:00)
-          if (totalMinutes >= sixPM && !existingTypes.has('auto_30min')) {
+        if (checkOutMinutes > fiveThirty) {
+          // 5:30-6:00 PM → auto-approved (full 30 min if checked out at/after 6 PM, partial otherwise)
+          if (checkOutMinutes >= sixPM && !existingTypes.has('auto_30min')) {
             await supabase.from('ot_requests').insert({
               user_id: user.id, date: today, ot_type: 'auto_30min', ot_minutes: 30,
               status: 'approved', notes: 'Auto-approved: 30 min OT (5:30-6:00 PM)',
               approved_at: now.toISOString(),
             });
-          }
-
-          // Extra minutes after 6 PM → pending approval
-          if (totalMinutes > sixPM && !existingTypes.has('auto_after_6pm')) {
-            const extraMinutes = totalMinutes - sixPM;
-            await supabase.from('ot_requests').insert({
-              user_id: user.id, date: today, ot_type: 'auto_after_6pm', ot_minutes: extraMinutes,
-              status: 'pending', notes: `Auto-generated: ${Math.floor(extraMinutes / 60)}h ${extraMinutes % 60}m after 6:00 PM`,
-            });
-          }
-
-          // If checked out between 5:30-6:00 PM, partial auto-approved
-          if (totalMinutes < sixPM && !existingTypes.has('auto_30min')) {
-            const partialMinutes = totalMinutes - fiveThirty;
+          } else if (checkOutMinutes < sixPM && !existingTypes.has('auto_30min')) {
+            const partialMinutes = checkOutMinutes - fiveThirty;
             await supabase.from('ot_requests').insert({
               user_id: user.id, date: today, ot_type: 'auto_30min', ot_minutes: partialMinutes,
               status: 'approved', notes: `Auto-approved: ${partialMinutes} min OT (5:30 PM - checkout)`,
               approved_at: now.toISOString(),
+            });
+          }
+
+          // After 6 PM → pending approval
+          if (checkOutMinutes > sixPM && !existingTypes.has('auto_after_6pm')) {
+            const extraMinutes = checkOutMinutes - sixPM;
+            await supabase.from('ot_requests').insert({
+              user_id: user.id, date: today, ot_type: 'auto_after_6pm', ot_minutes: extraMinutes,
+              status: 'pending',
+              notes: `Auto-generated: ${Math.floor(extraMinutes / 60)}h ${extraMinutes % 60}m after 6:00 PM`,
             });
           }
         }

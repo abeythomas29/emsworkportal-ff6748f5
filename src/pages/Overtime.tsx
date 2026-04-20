@@ -6,7 +6,7 @@ import { useAttendance } from '@/hooks/useAttendance';
 import { useMonthlyOTSummary } from '@/hooks/useOTCalculation';
 import { OTSummaryCard } from '@/components/overtime/OTSummaryCard';
 import { OTHistoryCard } from '@/components/overtime/OTHistoryCard';
-import { OTRequestDialog } from '@/components/overtime/OTRequestDialog';
+
 import { WorkingHoursInfo } from '@/components/overtime/WorkingHoursInfo';
 import { Navigate } from 'react-router-dom';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
