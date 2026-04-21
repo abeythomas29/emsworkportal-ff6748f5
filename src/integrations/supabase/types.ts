@@ -477,6 +477,63 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_requests: {
+        Row: {
+          created_at: string
+          expected_delivery: string | null
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          item_name: string
+          order_date: string | null
+          order_notes: string | null
+          quantity: number
+          reason: string | null
+          status: string
+          unit: string
+          updated_at: string
+          urgency: string
+          user_id: string
+          vendor: string | null
+        }
+        Insert: {
+          created_at?: string
+          expected_delivery?: string | null
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          item_name: string
+          order_date?: string | null
+          order_notes?: string | null
+          quantity?: number
+          reason?: string | null
+          status?: string
+          unit?: string
+          updated_at?: string
+          urgency?: string
+          user_id: string
+          vendor?: string | null
+        }
+        Update: {
+          created_at?: string
+          expected_delivery?: string | null
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          item_name?: string
+          order_date?: string | null
+          order_notes?: string | null
+          quantity?: number
+          reason?: string | null
+          status?: string
+          unit?: string
+          updated_at?: string
+          urgency?: string
+          user_id?: string
+          vendor?: string | null
+        }
+        Relationships: []
+      }
       raw_materials: {
         Row: {
           created_at: string

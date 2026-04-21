@@ -20,6 +20,7 @@ import {
   IndianRupee,
   Factory,
   TrendingUp,
+  ShoppingCart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -121,6 +122,12 @@ const navItems: NavItem[] = [
     label: 'Sales',
     path: '/sales',
     roles: ['admin'],
+  },
+  {
+    icon: <ShoppingCart size={20} />,
+    label: 'Purchase Requests',
+    path: '/requests',
+    roles: ['admin', 'manager', 'employee'],
   },
   {
     icon: <Settings size={20} />,
