@@ -179,6 +179,12 @@ export default function ProductionPage() {
             </TabsContent>
           )}
         </Tabs>
+
+        <ProductionLogDetailsDialog
+          log={selectedLog}
+          open={detailsOpen}
+          onOpenChange={setDetailsOpen}
+        />
       </div>
     </DashboardLayout>
   );
