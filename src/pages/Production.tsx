@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,11 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Trash2, Factory, Package, Boxes } from 'lucide-react';
 import { LogProductionDialog } from '@/components/production/LogProductionDialog';
 import { CatalogManager } from '@/components/production/CatalogManager';
+import { ProductionLogDetailsDialog } from '@/components/production/ProductionLogDetailsDialog';
 import {
   useProducts,
   useRawMaterials,
   useProductionLogs,
   useDeleteProductionLog,
+  type ProductionLog,
 } from '@/hooks/useProduction';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -25,6 +28,13 @@ export default function ProductionPage() {
   const { data: rawMaterials = [] } = useRawMaterials();
   const { data: logs = [], isLoading } = useProductionLogs();
   const delLog = useDeleteProductionLog();
+  const [selectedLog, setSelectedLog] = useState<ProductionLog | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
+  const openDetails = (log: ProductionLog) => {
+    setSelectedLog(log);
+    setDetailsOpen(true);
+  };
 
   return (
     <DashboardLayout>
