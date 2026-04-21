@@ -206,55 +206,49 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <CheckInOutCard />
 
-          {/* Employee Quick Actions */}
-          {!isAdmin && (
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {user?.employeeType === 'online' && (
-                    <Link to="/work-hours">
-                      <div className="p-6 rounded-xl bg-gradient-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer">
-                        <Clock className="w-8 h-8 mb-3" />
-                        <h3 className="font-semibold text-lg">Log Work Hours</h3>
-                        <p className="text-sm opacity-80">Record today's work</p>
+              {/* Employee Quick Actions */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {user?.employeeType === 'online' && (
+                      <Link to="/work-hours">
+                        <div className="p-6 rounded-xl bg-gradient-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer">
+                          <Clock className="w-8 h-8 mb-3" />
+                          <h3 className="font-semibold text-lg">Log Work Hours</h3>
+                          <p className="text-sm opacity-80">Record today's work</p>
+                        </div>
+                      </Link>
+                    )}
+                    <Link to="/leave">
+                      <div className="p-6 rounded-xl bg-gradient-secondary text-secondary-foreground hover:opacity-90 transition-opacity cursor-pointer">
+                        <Calendar className="w-8 h-8 mb-3" />
+                        <h3 className="font-semibold text-lg">Apply for Leave</h3>
+                        <p className="text-sm opacity-80">Request time off</p>
                       </div>
                     </Link>
-                  )}
-                  <Link to="/leave">
-                    <div className="p-6 rounded-xl bg-gradient-secondary text-secondary-foreground hover:opacity-90 transition-opacity cursor-pointer">
-                      <Calendar className="w-8 h-8 mb-3" />
-                      <h3 className="font-semibold text-lg">Apply for Leave</h3>
-                      <p className="text-sm opacity-80">Request time off</p>
-                    </div>
-                  </Link>
-                  <Link to="/attendance">
-                    <div className="p-6 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
-                      <CheckCircle2 className="w-8 h-8 mb-3 text-primary" />
-                      <h3 className="font-semibold text-lg">View Attendance</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Check your records
-                      </p>
-                    </div>
-                  </Link>
-                  <Link to="/settings">
-                    <div className="p-6 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
-                      <Users className="w-8 h-8 mb-3 text-accent" />
-                      <h3 className="font-semibold text-lg">My Profile</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Update information
-                      </p>
-                    </div>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                    <Link to="/attendance">
+                      <div className="p-6 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+                        <CheckCircle2 className="w-8 h-8 mb-3 text-primary" />
+                        <h3 className="font-semibold text-lg">View Attendance</h3>
+                        <p className="text-sm text-muted-foreground">Check your records</p>
+                      </div>
+                    </Link>
+                    <Link to="/settings">
+                      <div className="p-6 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+                        <Users className="w-8 h-8 mb-3 text-accent" />
+                        <h3 className="font-semibold text-lg">My Profile</h3>
+                        <p className="text-sm text-muted-foreground">Update information</p>
+                      </div>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
