@@ -106,7 +106,14 @@ export default function ProductionPage() {
                           <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{log.notes || '—'}</TableCell>
                           {isAdmin && (
                             <TableCell>
-                              <Button variant="ghost" size="icon" onClick={() => delLog.mutate(log.id)}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  delLog.mutate(log.id);
+                                }}
+                              >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </TableCell>
