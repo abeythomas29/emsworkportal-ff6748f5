@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,11 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Trash2, Factory, Package, Boxes } from 'lucide-react';
 import { LogProductionDialog } from '@/components/production/LogProductionDialog';
 import { CatalogManager } from '@/components/production/CatalogManager';
+import { ProductionLogDetailsDialog } from '@/components/production/ProductionLogDetailsDialog';
 import {
   useProducts,
   useRawMaterials,
   useProductionLogs,
   useDeleteProductionLog,
+  type ProductionLog,
 } from '@/hooks/useProduction';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -25,6 +28,13 @@ export default function ProductionPage() {
   const { data: rawMaterials = [] } = useRawMaterials();
   const { data: logs = [], isLoading } = useProductionLogs();
   const delLog = useDeleteProductionLog();
+  const [selectedLog, setSelectedLog] = useState<ProductionLog | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
+  const openDetails = (log: ProductionLog) => {
+    setSelectedLog(log);
+    setDetailsOpen(true);
+  };
 
   return (
     <DashboardLayout>
@@ -70,7 +80,11 @@ export default function ProductionPage() {
                       <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No production logs yet. Click "Log Production" to add one.</TableCell></TableRow>
                     ) : (
                       logs.map((log) => (
-                        <TableRow key={log.id}>
+                        <TableRow
+                          key={log.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => openDetails(log)}
+                        >
                           <TableCell>{format(new Date(log.date), 'dd MMM yyyy')}</TableCell>
                           <TableCell>{log.logger?.full_name}</TableCell>
                           <TableCell className="font-medium">{log.product?.name}</TableCell>
@@ -92,7 +106,14 @@ export default function ProductionPage() {
                           <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{log.notes || '—'}</TableCell>
                           {isAdmin && (
                             <TableCell>
-                              <Button variant="ghost" size="icon" onClick={() => delLog.mutate(log.id)}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  delLog.mutate(log.id);
+                                }}
+                              >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </TableCell>
@@ -158,6 +179,12 @@ export default function ProductionPage() {
             </TabsContent>
           )}
         </Tabs>
+
+        <ProductionLogDetailsDialog
+          log={selectedLog}
+          open={detailsOpen}
+          onOpenChange={setDetailsOpen}
+        />
       </div>
     </DashboardLayout>
   );
