@@ -110,20 +110,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Admin Stats */}
-        {isAdmin && (
-          <div className="grid grid-cols-1 gap-6">
-            <Link to="/leave-requests" className="block">
-              <StatCard
-                title="Pending Leaves"
-                value={pendingLeaveRequests.length}
-                subtitle="Awaiting approval"
-                icon={<Calendar className="w-6 h-6 text-warning" />}
-                variant="warning"
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-              />
-            </Link>
-          </div>
+        {/* Admin: Sales KPI strip (full width) */}
+        {role === 'admin' && (
+          <SalesKpiStrip />
         )}
 
         {/* Employee Stats */}
