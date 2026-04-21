@@ -13,7 +13,9 @@ import { BirthdayReminders } from '@/components/dashboard/BirthdayReminders';
 import { OnLeaveToday } from '@/components/dashboard/OnLeaveToday';
 import { ProductionOTSummary } from '@/components/dashboard/ProductionOTSummary';
 import { ProductionTodayWidget } from '@/components/dashboard/ProductionTodayWidget';
-import { SalesOverviewWidget } from '@/components/dashboard/SalesOverviewWidget';
+import { LowStockWidget } from '@/components/dashboard/LowStockWidget';
+import { SalesKpiStrip } from '@/components/dashboard/SalesKpiStrip';
+import { PendingLeavesCompact } from '@/components/dashboard/PendingLeavesCompact';
 import {
   Users,
   Clock,
@@ -108,20 +110,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Admin Stats */}
-        {isAdmin && (
-          <div className="grid grid-cols-1 gap-6">
-            <Link to="/leave-requests" className="block">
-              <StatCard
-                title="Pending Leaves"
-                value={pendingLeaveRequests.length}
-                subtitle="Awaiting approval"
-                icon={<Calendar className="w-6 h-6 text-warning" />}
-                variant="warning"
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-              />
-            </Link>
-          </div>
+        {/* Admin: Sales KPI strip (full width) */}
+        {role === 'admin' && (
+          <SalesKpiStrip />
         )}
 
         {/* Employee Stats */}
@@ -173,157 +164,91 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Birthday Reminders & On Leave Today */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <BirthdayReminders />
-          <OnLeaveToday />
-        </div>
-
-        {/* Production Today (admin/manager) */}
+        {/* ===== ADMIN LAYOUT ===== */}
         {isAdmin && (
-          <div className="grid grid-cols-1 gap-6">
-            <ProductionTodayWidget />
-          </div>
+          <>
+            {/* Production + Low Stock */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ProductionTodayWidget />
+              <LowStockWidget />
+            </div>
+
+            {/* Pending Leaves + On Leave Today */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <PendingLeavesCompact />
+              <OnLeaveToday />
+            </div>
+
+            {/* Birthdays + Check In/Out */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <BirthdayReminders />
+              <CheckInOutCard />
+            </div>
+          </>
         )}
 
-        {/* Sales Overview (admin only) */}
-        {role === 'admin' && (
-          <div className="grid grid-cols-1 gap-6">
-            <SalesOverviewWidget />
-          </div>
-        )}
+        {/* ===== EMPLOYEE LAYOUT ===== */}
+        {!isAdmin && (
+          <>
+            {/* Birthday + On Leave Today */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <BirthdayReminders />
+              <OnLeaveToday />
+            </div>
 
-        {/* OT Summary for Production Workers */}
-        {!isAdmin && user?.department?.toLowerCase() === 'production' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ProductionOTSummary />
-          </div>
-        )}
+            {/* OT Summary for Production Workers */}
+            {user?.department?.toLowerCase() === 'production' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ProductionOTSummary />
+              </div>
+            )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Check-in/out Card for all employees */}
-          <CheckInOutCard />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <CheckInOutCard />
 
-          {/* Pending Leave Requests - Admin/Manager */}
-          {isAdmin && (
-            <Card className="lg:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold">
-                  Pending Leave Requests
-                </CardTitle>
-                <Link to="/leave-requests">
-                  <Button variant="ghost" size="sm" className="text-primary">
-                    View All <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
-                {pendingLeaveRequests.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-muted-foreground">No pending leave requests</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {pendingLeaveRequests.slice(0, 3).map((request) => (
-                      <div
-                        key={request.id}
-                        className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
-                            {request.profiles?.full_name?.charAt(0) || 'U'}
-                          </div>
-                          <div>
-                            <p className="font-medium text-foreground">
-                              {request.profiles?.full_name || 'Unknown Employee'}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {getLeaveTypeLabel(request.leave_type)} Leave • {request.days} day
-                              {Number(request.days) > 1 ? 's' : ''} •{' '}
-                              {new Date(request.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                              {request.start_date !== request.end_date && (
-                                <> - {new Date(request.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
-                              )}
-                            </p>
-                          </div>
+              {/* Employee Quick Actions */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {user?.employeeType === 'online' && (
+                      <Link to="/work-hours">
+                        <div className="p-6 rounded-xl bg-gradient-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer">
+                          <Clock className="w-8 h-8 mb-3" />
+                          <h3 className="font-semibold text-lg">Log Work Hours</h3>
+                          <p className="text-sm opacity-80">Record today's work</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <StatusBadge status={request.status} />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => approveLeave(request.id)}
-                            className="text-success border-success hover:bg-success hover:text-success-foreground"
-                          >
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => rejectLeave(request.id)}
-                            className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                          >
-                            Reject
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Employee Quick Actions */}
-          {!isAdmin && (
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {user?.employeeType === 'online' && (
-                    <Link to="/work-hours">
-                      <div className="p-6 rounded-xl bg-gradient-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer">
-                        <Clock className="w-8 h-8 mb-3" />
-                        <h3 className="font-semibold text-lg">Log Work Hours</h3>
-                        <p className="text-sm opacity-80">Record today's work</p>
+                      </Link>
+                    )}
+                    <Link to="/leave">
+                      <div className="p-6 rounded-xl bg-gradient-secondary text-secondary-foreground hover:opacity-90 transition-opacity cursor-pointer">
+                        <Calendar className="w-8 h-8 mb-3" />
+                        <h3 className="font-semibold text-lg">Apply for Leave</h3>
+                        <p className="text-sm opacity-80">Request time off</p>
                       </div>
                     </Link>
-                  )}
-                  <Link to="/leave">
-                    <div className="p-6 rounded-xl bg-gradient-secondary text-secondary-foreground hover:opacity-90 transition-opacity cursor-pointer">
-                      <Calendar className="w-8 h-8 mb-3" />
-                      <h3 className="font-semibold text-lg">Apply for Leave</h3>
-                      <p className="text-sm opacity-80">Request time off</p>
-                    </div>
-                  </Link>
-                  <Link to="/attendance">
-                    <div className="p-6 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
-                      <CheckCircle2 className="w-8 h-8 mb-3 text-primary" />
-                      <h3 className="font-semibold text-lg">View Attendance</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Check your records
-                      </p>
-                    </div>
-                  </Link>
-                  <Link to="/settings">
-                    <div className="p-6 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
-                      <Users className="w-8 h-8 mb-3 text-accent" />
-                      <h3 className="font-semibold text-lg">My Profile</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Update information
-                      </p>
-                    </div>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                    <Link to="/attendance">
+                      <div className="p-6 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+                        <CheckCircle2 className="w-8 h-8 mb-3 text-primary" />
+                        <h3 className="font-semibold text-lg">View Attendance</h3>
+                        <p className="text-sm text-muted-foreground">Check your records</p>
+                      </div>
+                    </Link>
+                    <Link to="/settings">
+                      <div className="p-6 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+                        <Users className="w-8 h-8 mb-3 text-accent" />
+                        <h3 className="font-semibold text-lg">My Profile</h3>
+                        <p className="text-sm text-muted-foreground">Update information</p>
+                      </div>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

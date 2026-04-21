@@ -1,16 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Factory, AlertTriangle, ArrowRight, Package } from 'lucide-react';
+import { Factory, ArrowRight, Package, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useProductionLogs, useRawMaterials } from '@/hooks/useProduction';
+import { useProductionLogs } from '@/hooks/useProduction';
 import { format } from 'date-fns';
 
-const LOW_STOCK_THRESHOLD = 10;
-
 export function ProductionTodayWidget() {
-  const { data: logs = [], isLoading: logsLoading } = useProductionLogs();
-  const { data: rawMaterials = [], isLoading: rmLoading } = useRawMaterials();
+  const { data: logs = [], isLoading } = useProductionLogs();
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const todayLogs = logs.filter((l) => l.date === today);
@@ -29,19 +25,23 @@ export function ProductionTodayWidget() {
     });
   });
   const todayProducts = Array.from(outputByProduct.values()).sort((a, b) => b.qty - a.qty);
-
-  const lowStock = rawMaterials
-    .filter((r) => Number(r.current_stock) < LOW_STOCK_THRESHOLD)
-    .sort((a, b) => Number(a.current_stock) - Number(b.current_stock));
-
-  const isLoading = logsLoading || rmLoading;
+  const totalQty = todayProducts.reduce((s, p) => s + p.qty, 0);
+  const maxQty = Math.max(...todayProducts.map((p) => p.qty), 1);
+  const totalUnit = todayProducts[0]?.unit || 'kg';
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="h-full">
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <Factory className="w-5 h-5 text-primary" />
-          Production Today
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Factory className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-base font-semibold">Production Today</p>
+            <p className="text-xs text-muted-foreground font-normal">
+              {format(new Date(), 'EEEE, dd MMM')}
+            </p>
+          </div>
         </CardTitle>
         <Link to="/production">
           <Button variant="ghost" size="sm" className="text-primary">
@@ -49,70 +49,56 @@ export function ProductionTodayWidget() {
           </Button>
         </Link>
       </CardHeader>
-      <CardContent className="space-y-5">
-        {/* Today's output */}
-        <div>
-          <div className="flex items-center gap-2 mb-2 text-sm font-medium text-muted-foreground">
-            <Package className="w-4 h-4" /> Output ({format(new Date(), 'dd MMM')})
-          </div>
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading...</p>
-          ) : todayProducts.length === 0 ? (
+      <CardContent className="space-y-4">
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        ) : todayProducts.length === 0 ? (
+          <div className="text-center py-8">
+            <Package className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground">No production logged today.</p>
-          ) : (
-            <div className="space-y-2">
-              {todayProducts.map((p) => (
-                <div
-                  key={p.name}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                >
-                  <span className="font-medium">{p.name}</span>
-                  <Badge variant="secondary">
-                    {p.qty.toFixed(2)} {p.unit}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Low stock raw materials */}
-        <div>
-          <div className="flex items-center gap-2 mb-2 text-sm font-medium text-muted-foreground">
-            <AlertTriangle className="w-4 h-4 text-warning" /> Low Stock (&lt; {LOW_STOCK_THRESHOLD})
           </div>
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading...</p>
-          ) : lowStock.length === 0 ? (
-            <p className="text-sm text-muted-foreground">All raw materials are above threshold.</p>
-          ) : (
-            <div className="space-y-2">
-              {lowStock.slice(0, 5).map((r) => {
-                const stock = Number(r.current_stock);
-                const negative = stock < 0;
+        ) : (
+          <>
+            {/* Hero total */}
+            <div className="rounded-xl bg-gradient-primary text-primary-foreground p-5 flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wide opacity-80">Total Output</p>
+                <p className="text-3xl font-bold mt-1">
+                  {totalQty.toFixed(2)} <span className="text-lg font-medium opacity-90">{totalUnit}</span>
+                </p>
+                <p className="text-xs opacity-80 mt-1">
+                  Across {todayProducts.length} product{todayProducts.length > 1 ? 's' : ''}
+                </p>
+              </div>
+              <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+                <TrendingUp className="w-7 h-7" />
+              </div>
+            </div>
+
+            {/* Per product bars */}
+            <div className="space-y-3">
+              {todayProducts.map((p) => {
+                const pct = (p.qty / maxQty) * 100;
                 return (
-                  <div
-                    key={r.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border"
-                  >
-                    <span className="font-medium">{r.name}</span>
-                    <Badge
-                      variant={negative ? 'destructive' : 'outline'}
-                      className={!negative ? 'border-warning text-warning' : ''}
-                    >
-                      {stock.toFixed(2)} {r.unit}
-                    </Badge>
+                  <div key={p.name} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium truncate">{p.name}</span>
+                      <span className="font-semibold text-foreground">
+                        {p.qty.toFixed(2)} {p.unit}
+                      </span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
                   </div>
                 );
               })}
-              {lowStock.length > 5 && (
-                <p className="text-xs text-muted-foreground text-center pt-1">
-                  +{lowStock.length - 5} more
-                </p>
-              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
