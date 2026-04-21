@@ -80,7 +80,11 @@ export default function ProductionPage() {
                       <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No production logs yet. Click "Log Production" to add one.</TableCell></TableRow>
                     ) : (
                       logs.map((log) => (
-                        <TableRow key={log.id}>
+                        <TableRow
+                          key={log.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => openDetails(log)}
+                        >
                           <TableCell>{format(new Date(log.date), 'dd MMM yyyy')}</TableCell>
                           <TableCell>{log.logger?.full_name}</TableCell>
                           <TableCell className="font-medium">{log.product?.name}</TableCell>
