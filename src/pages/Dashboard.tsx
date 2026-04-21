@@ -13,7 +13,9 @@ import { BirthdayReminders } from '@/components/dashboard/BirthdayReminders';
 import { OnLeaveToday } from '@/components/dashboard/OnLeaveToday';
 import { ProductionOTSummary } from '@/components/dashboard/ProductionOTSummary';
 import { ProductionTodayWidget } from '@/components/dashboard/ProductionTodayWidget';
-import { SalesOverviewWidget } from '@/components/dashboard/SalesOverviewWidget';
+import { LowStockWidget } from '@/components/dashboard/LowStockWidget';
+import { SalesKpiStrip } from '@/components/dashboard/SalesKpiStrip';
+import { PendingLeavesCompact } from '@/components/dashboard/PendingLeavesCompact';
 import {
   Users,
   Clock,
