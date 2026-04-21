@@ -64,10 +64,19 @@ export function OnLeaveToday() {
   if (isLoading) return null;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center gap-2 pb-3">
-        <Palmtree className="w-5 h-5 text-warning" />
-        <CardTitle className="text-lg font-semibold">On Leave Today</CardTitle>
+    <Card className="h-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <div className="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center">
+            <Palmtree className="w-5 h-5 text-warning" />
+          </div>
+          <div>
+            <p className="text-base font-semibold">On Leave Today</p>
+            <p className="text-xs text-muted-foreground font-normal">
+              {onLeave.length === 0 ? 'No one is away' : `${onLeave.length} away`}
+            </p>
+          </div>
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {onLeave.length === 0 ? (
