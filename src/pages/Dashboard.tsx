@@ -16,6 +16,7 @@ import { ProductionTodayWidget } from '@/components/dashboard/ProductionTodayWid
 import { LowStockWidget } from '@/components/dashboard/LowStockWidget';
 import { SalesKpiStrip } from '@/components/dashboard/SalesKpiStrip';
 import { PendingLeavesCompact } from '@/components/dashboard/PendingLeavesCompact';
+import { PurchaseRequestsWidget } from '@/components/dashboard/PurchaseRequestsWidget';
 import {
   Users,
   Clock,
@@ -179,6 +180,9 @@ export default function DashboardPage() {
               <OnLeaveToday />
             </div>
 
+            {/* Purchase Requests */}
+            <PurchaseRequestsWidget />
+
             {/* Birthdays + Check In/Out */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <BirthdayReminders />
@@ -203,6 +207,9 @@ export default function DashboardPage() {
                 <LowStockWidget />
               </div>
             )}
+
+            {/* Purchase Requests for everyone */}
+            <PurchaseRequestsWidget />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <CheckInOutCard />
