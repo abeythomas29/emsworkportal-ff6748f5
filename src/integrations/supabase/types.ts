@@ -738,6 +738,76 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_receipts: {
+        Row: {
+          created_at: string
+          id: string
+          item_type: string
+          notes: string | null
+          product_id: string | null
+          purchase_request_id: string | null
+          quantity: number
+          raw_material_id: string | null
+          received_date: string
+          unit: string
+          updated_at: string
+          user_id: string
+          vendor: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_type: string
+          notes?: string | null
+          product_id?: string | null
+          purchase_request_id?: string | null
+          quantity: number
+          raw_material_id?: string | null
+          received_date?: string
+          unit: string
+          updated_at?: string
+          user_id: string
+          vendor?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_type?: string
+          notes?: string | null
+          product_id?: string | null
+          purchase_request_id?: string | null
+          quantity?: number
+          raw_material_id?: string | null
+          received_date?: string
+          unit?: string
+          updated_at?: string
+          user_id?: string
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_receipts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_receipts_purchase_request_id_fkey"
+            columns: ["purchase_request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_receipts_raw_material_id_fkey"
+            columns: ["raw_material_id"]
+            isOneToOne: false
+            referencedRelation: "raw_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
