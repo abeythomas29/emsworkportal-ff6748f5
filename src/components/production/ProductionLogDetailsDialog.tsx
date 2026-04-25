@@ -103,6 +103,13 @@ export function ProductionLogDetailsDialog({ log, open, onOpenChange, canEdit, o
             </div>
           </div>
         </ScrollArea>
+        {canEdit && onEdit && (
+          <DialogFooter>
+            <Button onClick={onEdit} variant="outline">
+              <Pencil className="mr-2 h-4 w-4" />Edit Log
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );
