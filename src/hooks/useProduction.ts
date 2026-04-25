@@ -268,6 +268,62 @@ export function useCreateProductionLog() {
   });
 }
 
+export function useUpdateProductionLog() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      date: string;
+      product_id: string;
+      quantity_produced: number;
+      notes?: string;
+      materials: Array<{ raw_material_id: string; quantity_consumed: number }>;
+    }) => {
+      const { error: updErr } = await supabase
+        .from('production_logs')
+        .update({
+          date: input.date,
+          product_id: input.product_id,
+          quantity_produced: input.quantity_produced,
+          notes: input.notes || null,
+        })
+        .eq('id', input.id);
+      if (updErr) throw updErr;
+
+      // Replace materials: delete existing then insert new (triggers will adjust stock)
+      const { error: delErr } = await supabase
+        .from('production_log_materials')
+        .delete()
+        .eq('production_log_id', input.id);
+      if (delErr) throw delErr;
+
+      const validMats = input.materials.filter(
+        (m) => m.raw_material_id && m.quantity_consumed > 0
+      );
+      if (validMats.length > 0) {
+        const { error: matErr } = await supabase.from('production_log_materials').insert(
+          validMats.map((m) => ({
+            production_log_id: input.id,
+            raw_material_id: m.raw_material_id,
+            quantity_consumed: m.quantity_consumed,
+          }))
+        );
+        if (matErr) throw matErr;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['production_logs'] });
+      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: ['raw_materials'] });
+      toast({ title: 'Production log updated', description: 'Inventory adjusted.' });
+    },
+    onError: (e: any) => {
+      logError('updateProductionLog', e);
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    },
+  });
+}
+
 export function useDeleteProductionLog() {
   const qc = useQueryClient();
   return useMutation({
