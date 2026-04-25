@@ -45,7 +45,7 @@ export function BirthdayReminders() {
             daysUntil,
           };
         })
-        .filter((b) => b.daysUntil <= 7) // Show birthdays within next 7 days
+        .filter((b) => b.daysUntil <= 2) // Show birthdays within next 2 days
         .sort((a, b) => a.daysUntil - b.daysUntil);
 
       setBirthdays(upcoming);
