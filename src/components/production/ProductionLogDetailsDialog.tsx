@@ -1,8 +1,9 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Calendar, User, Package, Boxes, FileText, Clock } from 'lucide-react';
+import { Calendar, User, Package, Boxes, FileText, Clock, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import type { ProductionLog } from '@/hooks/useProduction';
 
@@ -10,9 +11,11 @@ interface Props {
   log: ProductionLog | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  canEdit?: boolean;
+  onEdit?: () => void;
 }
 
-export function ProductionLogDetailsDialog({ log, open, onOpenChange }: Props) {
+export function ProductionLogDetailsDialog({ log, open, onOpenChange, canEdit, onEdit }: Props) {
   if (!log) return null;
 
   return (
@@ -100,6 +103,13 @@ export function ProductionLogDetailsDialog({ log, open, onOpenChange }: Props) {
             </div>
           </div>
         </ScrollArea>
+        {canEdit && onEdit && (
+          <DialogFooter>
+            <Button onClick={onEdit} variant="outline">
+              <Pencil className="mr-2 h-4 w-4" />Edit Log
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

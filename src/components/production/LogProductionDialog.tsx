@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
-import { useProducts, useRawMaterials, useCreateProductionLog } from '@/hooks/useProduction';
+import {
+  useProducts,
+  useRawMaterials,
+  useCreateProductionLog,
+  useUpdateProductionLog,
+  type ProductionLog,
+} from '@/hooks/useProduction';
 import { format } from 'date-fns';
 
 interface MaterialRow {
@@ -14,8 +20,19 @@ interface MaterialRow {
   quantity_consumed: string;
 }
 
-export function LogProductionDialog({ trigger }: { trigger?: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+interface Props {
+  trigger?: React.ReactNode;
+  editLog?: ProductionLog | null;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function LogProductionDialog({ trigger, editLog, open: controlledOpen, onOpenChange }: Props) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
+
+  const isEdit = !!editLog;
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [productId, setProductId] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -25,6 +42,25 @@ export function LogProductionDialog({ trigger }: { trigger?: React.ReactNode }) 
   const { data: products = [] } = useProducts();
   const { data: rawMaterials = [] } = useRawMaterials();
   const createLog = useCreateProductionLog();
+  const updateLog = useUpdateProductionLog();
+
+  // Populate form when editing
+  useEffect(() => {
+    if (open && editLog) {
+      setDate(editLog.date);
+      setProductId(editLog.product_id);
+      setQuantity(String(editLog.quantity_produced));
+      setNotes(editLog.notes || '');
+      const mats = (editLog.materials || []).map((m) => ({
+        raw_material_id: m.raw_material_id,
+        quantity_consumed: String(m.quantity_consumed),
+      }));
+      setMaterials(mats.length > 0 ? mats : [{ raw_material_id: '', quantity_consumed: '' }]);
+    } else if (open && !editLog) {
+      reset();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editLog]);
 
   const reset = () => {
     setDate(format(new Date(), 'yyyy-MM-dd'));
@@ -36,7 +72,7 @@ export function LogProductionDialog({ trigger }: { trigger?: React.ReactNode }) 
 
   const handleSubmit = async () => {
     if (!productId || !quantity) return;
-    await createLog.mutateAsync({
+    const payload = {
       date,
       product_id: productId,
       quantity_produced: parseFloat(quantity),
@@ -45,17 +81,26 @@ export function LogProductionDialog({ trigger }: { trigger?: React.ReactNode }) 
         raw_material_id: m.raw_material_id,
         quantity_consumed: parseFloat(m.quantity_consumed) || 0,
       })),
-    });
+    };
+    if (isEdit && editLog) {
+      await updateLog.mutateAsync({ id: editLog.id, ...payload });
+    } else {
+      await createLog.mutateAsync(payload);
+    }
     reset();
     setOpen(false);
   };
 
+  const isPending = createLog.isPending || updateLog.isPending;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger || <Button><Plus className="mr-2 h-4 w-4" />Log Production</Button>}</DialogTrigger>
+      {trigger !== undefined || !isEdit ? (
+        <DialogTrigger asChild>{trigger || <Button><Plus className="mr-2 h-4 w-4" />Log Production</Button>}</DialogTrigger>
+      ) : null}
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Log Production Output</DialogTitle>
+          <DialogTitle>{isEdit ? 'Edit Production Log' : 'Log Production Output'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -68,7 +113,7 @@ export function LogProductionDialog({ trigger }: { trigger?: React.ReactNode }) 
               <Select value={productId} onValueChange={setProductId}>
                 <SelectTrigger><SelectValue placeholder="Select product" /></SelectTrigger>
                 <SelectContent>
-                  {products.filter((p) => p.is_active).map((p) => (
+                  {products.filter((p) => p.is_active || p.id === productId).map((p) => (
                     <SelectItem key={p.id} value={p.id}>{p.name} ({p.unit})</SelectItem>
                   ))}
                 </SelectContent>
@@ -104,7 +149,7 @@ export function LogProductionDialog({ trigger }: { trigger?: React.ReactNode }) 
                 >
                   <SelectTrigger><SelectValue placeholder="Select material" /></SelectTrigger>
                   <SelectContent>
-                    {rawMaterials.filter((r) => r.is_active).map((r) => (
+                    {rawMaterials.filter((r) => r.is_active || r.id === m.raw_material_id).map((r) => (
                       <SelectItem key={r.id} value={r.id}>{r.name} ({r.unit}) — stock: {r.current_stock}</SelectItem>
                     ))}
                   </SelectContent>
@@ -140,8 +185,8 @@ export function LogProductionDialog({ trigger }: { trigger?: React.ReactNode }) 
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={!productId || !quantity || createLog.isPending}>
-            {createLog.isPending ? 'Saving...' : 'Save Production Log'}
+          <Button onClick={handleSubmit} disabled={!productId || !quantity || isPending}>
+            {isPending ? 'Saving...' : isEdit ? 'Save Changes' : 'Save Production Log'}
           </Button>
         </DialogFooter>
       </DialogContent>
