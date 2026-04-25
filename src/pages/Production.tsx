@@ -135,6 +135,67 @@ export default function ProductionPage() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="receipts" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><PackagePlus className="h-5 w-5" />Recent Stock Receipts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Received By</TableHead>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Vendor</TableHead>
+                      <TableHead>Notes</TableHead>
+                      {canManageCatalog && <TableHead className="w-12" />}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {receipts.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={canManageCatalog ? 8 : 7} className="text-center text-muted-foreground">
+                          No stock receipts yet. Click "Record Received Stock" to add one.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      receipts.map((r) => {
+                        const itemName = r.item_type === 'raw_material' ? r.raw_material?.name : r.product?.name;
+                        return (
+                          <TableRow key={r.id}>
+                            <TableCell>{format(new Date(r.received_date), 'dd MMM yyyy')}</TableCell>
+                            <TableCell>{r.receiver?.full_name}</TableCell>
+                            <TableCell className="font-medium">{itemName || '—'}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs">
+                                {r.item_type === 'raw_material' ? 'Raw Material' : 'Product'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">+{Number(r.quantity).toFixed(2)} {r.unit}</Badge>
+                            </TableCell>
+                            <TableCell className="text-sm">{r.vendor || '—'}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{r.notes || '—'}</TableCell>
+                            {canManageCatalog && (
+                              <TableCell>
+                                <Button variant="ghost" size="icon" onClick={() => delReceipt.mutate(r.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="inventory" className="space-y-4">
             <div className="grid lg:grid-cols-2 gap-6">
               <Card>
