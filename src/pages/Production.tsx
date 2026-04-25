@@ -22,7 +22,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 
 export default function ProductionPage() {
-  const { role, profile } = useAuth();
+  const { user, role, profile } = useAuth();
   const isAdmin = role === 'admin';
   const isProduction = (profile?.department || '').toLowerCase() === 'production';
   const canManageCatalog = isAdmin || isProduction;
@@ -34,10 +34,20 @@ export default function ProductionPage() {
   const delReceipt = useDeleteStockReceipt();
   const [selectedLog, setSelectedLog] = useState<ProductionLog | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+
+  const canEditSelected = !!selectedLog && (
+    isAdmin || (isProduction && selectedLog.user_id === user?.id)
+  );
 
   const openDetails = (log: ProductionLog) => {
     setSelectedLog(log);
     setDetailsOpen(true);
+  };
+
+  const handleEdit = () => {
+    setDetailsOpen(false);
+    setEditOpen(true);
   };
 
   return (
