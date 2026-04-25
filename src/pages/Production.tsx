@@ -263,6 +263,14 @@ export default function ProductionPage() {
           log={selectedLog}
           open={detailsOpen}
           onOpenChange={setDetailsOpen}
+          canEdit={canEditSelected}
+          onEdit={handleEdit}
+        />
+
+        <LogProductionDialog
+          editLog={selectedLog}
+          open={editOpen}
+          onOpenChange={setEditOpen}
         />
       </div>
     </DashboardLayout>
