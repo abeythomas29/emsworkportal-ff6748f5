@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Factory, Package, Boxes } from 'lucide-react';
+import { Trash2, Factory, Package, Boxes, PackagePlus } from 'lucide-react';
 import { LogProductionDialog } from '@/components/production/LogProductionDialog';
 import { CatalogManager } from '@/components/production/CatalogManager';
 import { ProductionLogDetailsDialog } from '@/components/production/ProductionLogDetailsDialog';
+import { RecordReceiptDialog } from '@/components/production/RecordReceiptDialog';
 import {
   useProducts,
   useRawMaterials,
@@ -16,6 +17,7 @@ import {
   useDeleteProductionLog,
   type ProductionLog,
 } from '@/hooks/useProduction';
+import { useStockReceipts, useDeleteStockReceipt } from '@/hooks/useStockReceipts';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 
@@ -28,6 +30,8 @@ export default function ProductionPage() {
   const { data: rawMaterials = [] } = useRawMaterials();
   const { data: logs = [], isLoading } = useProductionLogs();
   const delLog = useDeleteProductionLog();
+  const { data: receipts = [] } = useStockReceipts();
+  const delReceipt = useDeleteStockReceipt();
   const [selectedLog, setSelectedLog] = useState<ProductionLog | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -47,12 +51,16 @@ export default function ProductionPage() {
             </h1>
             <p className="text-muted-foreground">Track daily production output and raw material consumption.</p>
           </div>
-          <LogProductionDialog />
+          <div className="flex flex-wrap gap-2">
+            {canManageCatalog && <RecordReceiptDialog />}
+            <LogProductionDialog />
+          </div>
         </div>
 
         <Tabs defaultValue="logs">
           <TabsList>
             <TabsTrigger value="logs">Production Log</TabsTrigger>
+            <TabsTrigger value="receipts">Stock Receipts</TabsTrigger>
             <TabsTrigger value="inventory">Inventory</TabsTrigger>
             {canManageCatalog && <TabsTrigger value="catalog">Manage Catalog</TabsTrigger>}
           </TabsList>
