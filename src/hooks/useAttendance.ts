@@ -136,9 +136,18 @@ export function useAttendance() {
 
       // Auto-create OT for production workers on checkout
       if (user.department?.toLowerCase() === 'production') {
+        // Convert to IST (Asia/Kolkata) so thresholds work regardless of device/server timezone
+        const toISTMinutes = (d: Date) => {
+          const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false,
+          }).formatToParts(d);
+          const h = Number(parts.find(p => p.type === 'hour')?.value ?? '0');
+          const m = Number(parts.find(p => p.type === 'minute')?.value ?? '0');
+          return h * 60 + m;
+        };
         const checkInDate = new Date(todayAttendance.check_in);
-        const checkInMinutes = checkInDate.getHours() * 60 + checkInDate.getMinutes();
-        const checkOutMinutes = now.getHours() * 60 + now.getMinutes();
+        const checkInMinutes = toISTMinutes(checkInDate);
+        const checkOutMinutes = toISTMinutes(now);
         const nineAM = 9 * 60;
         const fiveThirty = 17 * 60 + 30;
         const sixPM = 18 * 60;
