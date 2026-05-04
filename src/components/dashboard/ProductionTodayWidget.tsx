@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Factory, ArrowRight, Package, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useProductionLogs } from '@/hooks/useProduction';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 export function ProductionTodayWidget() {
   const { data: logs = [], isLoading } = useProductionLogs();
@@ -11,9 +11,20 @@ export function ProductionTodayWidget() {
   const today = format(new Date(), 'yyyy-MM-dd');
   const todayLogs = logs.filter((l) => l.date === today);
 
-  // Aggregate today's output per product
+  // Fallback: if nothing today, show most recent production date
+  let displayLogs = todayLogs;
+  let displayDate = today;
+  let isToday = true;
+  if (todayLogs.length === 0 && logs.length > 0) {
+    const sorted = [...logs].sort((a, b) => (a.date < b.date ? 1 : -1));
+    displayDate = sorted[0].date;
+    displayLogs = logs.filter((l) => l.date === displayDate);
+    isToday = false;
+  }
+
+  // Aggregate output per product for the displayed date
   const outputByProduct = new Map<string, { name: string; unit: string; qty: number }>();
-  todayLogs.forEach((l) => {
+  displayLogs.forEach((l) => {
     const key = l.product_id;
     const prev = outputByProduct.get(key);
     const name = l.product?.name || 'Unknown';
@@ -24,10 +35,16 @@ export function ProductionTodayWidget() {
       qty: (prev?.qty || 0) + Number(l.quantity_produced),
     });
   });
-  const todayProducts = Array.from(outputByProduct.values()).sort((a, b) => b.qty - a.qty);
-  const totalQty = todayProducts.reduce((s, p) => s + p.qty, 0);
-  const maxQty = Math.max(...todayProducts.map((p) => p.qty), 1);
-  const totalUnit = todayProducts[0]?.unit || 'kg';
+  const displayProducts = Array.from(outputByProduct.values()).sort((a, b) => b.qty - a.qty);
+  const totalQty = displayProducts.reduce((s, p) => s + p.qty, 0);
+  const maxQty = Math.max(...displayProducts.map((p) => p.qty), 1);
+  const totalUnit = displayProducts[0]?.unit || 'kg';
+
+  const headerSubtitle = isToday
+    ? format(new Date(), 'EEEE, dd MMM')
+    : `Last logged: ${format(parseISO(displayDate), 'EEEE, dd MMM')}`;
+
+  const heroLabel = isToday ? "Today's Output" : 'Latest Output';
 
   return (
     <Card className="h-full">
@@ -37,10 +54,8 @@ export function ProductionTodayWidget() {
             <Factory className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-base font-semibold">Production Today</p>
-            <p className="text-xs text-muted-foreground font-normal">
-              {format(new Date(), 'EEEE, dd MMM')}
-            </p>
+            <p className="text-base font-semibold">Production</p>
+            <p className="text-xs text-muted-foreground font-normal">{headerSubtitle}</p>
           </div>
         </CardTitle>
         <Link to="/production">
@@ -52,22 +67,22 @@ export function ProductionTodayWidget() {
       <CardContent className="space-y-4">
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
-        ) : todayProducts.length === 0 ? (
+        ) : displayProducts.length === 0 ? (
           <div className="text-center py-8">
             <Package className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No production logged today.</p>
+            <p className="text-sm text-muted-foreground">No production logged yet.</p>
           </div>
         ) : (
           <>
             {/* Hero total */}
             <div className="rounded-xl bg-gradient-primary text-primary-foreground p-5 flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-wide opacity-80">Total Output</p>
+                <p className="text-xs uppercase tracking-wide opacity-80">{heroLabel}</p>
                 <p className="text-3xl font-bold mt-1">
                   {totalQty.toFixed(2)} <span className="text-lg font-medium opacity-90">{totalUnit}</span>
                 </p>
                 <p className="text-xs opacity-80 mt-1">
-                  Across {todayProducts.length} product{todayProducts.length > 1 ? 's' : ''}
+                  Across {displayProducts.length} product{displayProducts.length > 1 ? 's' : ''}
                 </p>
               </div>
               <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
@@ -75,15 +90,15 @@ export function ProductionTodayWidget() {
               </div>
             </div>
 
-            {/* Per product bars */}
+            {/* Per product list with quantities */}
             <div className="space-y-3">
-              {todayProducts.map((p) => {
+              {displayProducts.map((p) => {
                 const pct = (p.qty / maxQty) * 100;
                 return (
                   <div key={p.name} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium truncate">{p.name}</span>
-                      <span className="font-semibold text-foreground">
+                    <div className="flex items-center justify-between text-sm gap-2">
+                      <span className="font-medium truncate flex-1">{p.name}</span>
+                      <span className="font-semibold text-foreground whitespace-nowrap">
                         {p.qty.toFixed(2)} {p.unit}
                       </span>
                     </div>
