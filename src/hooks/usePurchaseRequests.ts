@@ -61,11 +61,9 @@ export function usePurchaseRequests() {
       if (userIds.length === 0) return (data ?? []) as PurchaseRequest[];
 
       const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, department')
-        .in('id', userIds);
+        .rpc('get_basic_profiles', { _user_ids: userIds });
 
-      const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+      const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
       return (data ?? []).map((r) => ({
         ...r,
         requester_name: profileMap.get(r.user_id)?.full_name ?? 'Unknown',

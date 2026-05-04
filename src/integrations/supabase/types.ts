@@ -872,6 +872,14 @@ export type Database = {
     Functions: {
       accrue_earned_leave: { Args: never; Returns: undefined }
       cap_earned_leave_year_end: { Args: never; Returns: undefined }
+      get_basic_profiles: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          department: string
+          full_name: string
+          id: string
+        }[]
+      }
       get_sales_dashboard_stats: { Args: never; Returns: Json }
       get_upcoming_birthdays: {
         Args: never
