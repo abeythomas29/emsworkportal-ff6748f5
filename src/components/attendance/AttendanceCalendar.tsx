@@ -209,10 +209,6 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
           <span className="text-muted-foreground">Half Day</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-blue-500/20 border border-blue-500/50" />
-          <span className="text-muted-foreground">Leave</span>
-        </div>
-        <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-yellow-400/30 border border-yellow-500/50" />
           <span className="text-muted-foreground">CL</span>
         </div>
