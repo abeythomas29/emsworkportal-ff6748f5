@@ -58,7 +58,7 @@ export default function SalaryPage() {
       // Fetch all active employees
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, full_name, department, base_salary, employee_type')
+        .select('id, full_name, department, base_salary, employee_type, joining_date')
         .eq('is_active', true)
         .order('full_name');
 
