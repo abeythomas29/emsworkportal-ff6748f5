@@ -47,27 +47,32 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
     .filter((r) => r.status === 'half_day')
     .map((r) => new Date(r.date + 'T00:00:00'));
 
-  // Build leave dates from approved leave requests
-  const leaveDatesFromRequests = useMemo(() => {
-    const dates: Date[] = [];
+  // Build leave dates from approved leave requests, split by type
+  const { clDates, elDates, lwpDates } = useMemo(() => {
+    const cl: Date[] = [];
+    const el: Date[] = [];
+    const lwp: Date[] = [];
     leaveRequests
       .filter((lr) => lr.status === 'approved')
       .forEach((lr) => {
         const start = new Date(lr.start_date + 'T00:00:00');
         const end = new Date(lr.end_date + 'T00:00:00');
+        const bucket =
+          lr.leave_type === 'casual' ? cl :
+          lr.leave_type === 'earned' ? el :
+          lr.leave_type === 'lwp' ? lwp : cl;
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-          dates.push(new Date(d));
+          bucket.push(new Date(d));
         }
       });
-    return dates;
-  }, [leaveRequests]);
-
-  // Also include leave status from attendance records
-  const leaveFromAttendance = attendance
-    .filter((r) => r.status === 'leave' || r.status === 'lwp')
-    .map((r) => new Date(r.date + 'T00:00:00'));
-
-  const allLeaveDates = [...leaveDatesFromRequests, ...leaveFromAttendance];
+    // Also include leave status from attendance records (treat plain "leave" as CL)
+    attendance.forEach((r) => {
+      const d = new Date(r.date + 'T00:00:00');
+      if (r.status === 'leave') cl.push(d);
+      else if (r.status === 'lwp') lwp.push(d);
+    });
+    return { clDates: cl, elDates: el, lwpDates: lwp };
+  }, [leaveRequests, attendance]);
 
   // Monthly summary
   const monthlySummary = useMemo(() => {
@@ -131,14 +136,18 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
           present: presentDates,
           absent: absentDates,
           halfDay: halfDayDates,
-          leave: allLeaveDates,
+          casualLeave: clDates,
+          earnedLeave: elDates,
+          lwp: lwpDates,
           holiday: holidayDates,
         }}
         modifiersClassNames={{
           present: '!bg-green-500/20 !text-green-700 dark:!text-green-400',
           absent: '!bg-red-500/20 !text-red-700 dark:!text-red-400',
           halfDay: '!bg-orange-500/20 !text-orange-700 dark:!text-orange-400',
-          leave: '!bg-blue-500/20 !text-blue-700 dark:!text-blue-400',
+          casualLeave: '!bg-yellow-400/30 !text-yellow-800 dark:!text-yellow-300',
+          earnedLeave: '!bg-blue-500/20 !text-blue-700 dark:!text-blue-400',
+          lwp: '!bg-orange-600/30 !text-orange-800 dark:!text-orange-300',
           holiday: '!bg-purple-500/20 !text-purple-700 dark:!text-purple-400',
         }}
         disabled
@@ -200,8 +209,16 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
           <span className="text-muted-foreground">Half Day</span>
         </div>
         <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-yellow-400/30 border border-yellow-500/50" />
+          <span className="text-muted-foreground">CL</span>
+        </div>
+        <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-blue-500/20 border border-blue-500/50" />
-          <span className="text-muted-foreground">Leave</span>
+          <span className="text-muted-foreground">EL</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-orange-600/30 border border-orange-600/50" />
+          <span className="text-muted-foreground">LWP</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-purple-500/20 border border-purple-500/50" />
