@@ -43,6 +43,47 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
     .filter((r) => r.status === 'absent')
     .map((r) => new Date(r.date + 'T00:00:00'));
 
+  // Implicit absent: past working days in viewed month with no attendance/leave/holiday record
+  const implicitAbsentDates = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const recordedDates = new Set(attendance.map((r) => r.date));
+    const holidaySet = new Set(holidays.map((h) => h.date));
+
+    const approvedLeaveSet = new Set<string>();
+    leaveRequests
+      .filter((lr) => lr.status === 'approved')
+      .forEach((lr) => {
+        const start = new Date(lr.start_date + 'T00:00:00');
+        const end = new Date(lr.end_date + 'T00:00:00');
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          approvedLeaveSet.add(ds);
+        }
+      });
+
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const result: Date[] = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(year, month, day);
+      if (d >= today) continue;
+      const dow = d.getDay();
+      if (dow === 0 || dow === 6) continue;
+      const ds = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      if (recordedDates.has(ds)) continue;
+      if (holidaySet.has(ds)) continue;
+      if (approvedLeaveSet.has(ds)) continue;
+      result.push(d);
+    }
+    return result;
+  }, [attendance, holidays, leaveRequests, currentMonth]);
+
+  const allAbsentDates = [...absentDates, ...implicitAbsentDates];
+
   const halfDayDates = attendance
     .filter((r) => r.status === 'half_day')
     .map((r) => new Date(r.date + 'T00:00:00'));
@@ -119,8 +160,13 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
       if (isSameMonth(d, monthStart)) holidayCount++;
     });
 
+    // Add implicit absents (past working days with no record/leave/holiday) in this month
+    implicitAbsentDates.forEach((d) => {
+      if (isSameMonth(d, monthStart)) absentCount++;
+    });
+
     return { presentCount, absentCount, halfDayCount, clUsed, elUsed, lwpCount, holidayCount };
-  }, [attendance, leaveRequests, holidays, currentMonth]);
+  }, [attendance, leaveRequests, holidays, currentMonth, implicitAbsentDates]);
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -134,7 +180,7 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
         }}
         modifiers={{
           present: presentDates,
-          absent: absentDates,
+          absent: allAbsentDates,
           halfDay: halfDayDates,
           casualLeave: clDates,
           earnedLeave: elDates,
