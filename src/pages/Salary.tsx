@@ -138,9 +138,26 @@ export default function SalaryPage() {
         const isProduction = p.department?.toLowerCase() === 'production';
         const lwpDays = lwpMap.get(p.id) || 0;
         const presentDays = presentMap.get(p.id) || 0;
+
+        // Prorate base salary if employee joined mid-month within the selected month
+        let proratedBase = p.base_salary;
+        if (p.joining_date) {
+          const join = new Date(p.joining_date);
+          const joinYM = join.getFullYear() * 12 + join.getMonth();
+          const selYM = (year) * 12 + (month - 1);
+          if (joinYM === selYM) {
+            const daysInMonth = monthEnd.getDate();
+            const payableDays = daysInMonth - join.getDate() + 1;
+            proratedBase = Math.round((p.base_salary / 30) * payableDays * 100) / 100;
+          } else if (joinYM > selYM) {
+            // Joined after this month — no salary
+            proratedBase = 0;
+          }
+        }
+
         const dailyRate = p.base_salary / 30;
         const deductions = Math.round(lwpDays * dailyRate * 100) / 100;
-        const effectiveSalary = Math.round((p.base_salary - deductions) * 100) / 100;
+        const effectiveSalary = Math.round((proratedBase - deductions) * 100) / 100;
 
         const approvedOTMins = isProduction ? (otMap.get(p.id) || 0) : 0;
         const autoOTMins = isProduction ? (autoOTMap.get(p.id) || 0) : 0;
@@ -152,7 +169,7 @@ export default function SalaryPage() {
           id: p.id,
           full_name: p.full_name,
           department: p.department,
-          base_salary: p.base_salary,
+          base_salary: proratedBase,
           employee_type: p.employee_type,
           presentDays,
           totalWorkingDays,
@@ -162,7 +179,7 @@ export default function SalaryPage() {
           otPayment,
           deductions,
           effectiveSalary,
-          totalSalary: effectiveSalary + otPayment,
+          totalSalary: Math.max(0, effectiveSalary) + otPayment,
         };
       });
 
