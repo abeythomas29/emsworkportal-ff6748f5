@@ -136,14 +136,18 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
           present: presentDates,
           absent: absentDates,
           halfDay: halfDayDates,
-          leave: allLeaveDates,
+          casualLeave: clDates,
+          earnedLeave: elDates,
+          lwp: lwpDates,
           holiday: holidayDates,
         }}
         modifiersClassNames={{
           present: '!bg-green-500/20 !text-green-700 dark:!text-green-400',
           absent: '!bg-red-500/20 !text-red-700 dark:!text-red-400',
           halfDay: '!bg-orange-500/20 !text-orange-700 dark:!text-orange-400',
-          leave: '!bg-blue-500/20 !text-blue-700 dark:!text-blue-400',
+          casualLeave: '!bg-yellow-400/30 !text-yellow-800 dark:!text-yellow-300',
+          earnedLeave: '!bg-blue-500/20 !text-blue-700 dark:!text-blue-400',
+          lwp: '!bg-orange-600/30 !text-orange-800 dark:!text-orange-300',
           holiday: '!bg-purple-500/20 !text-purple-700 dark:!text-purple-400',
         }}
         disabled
