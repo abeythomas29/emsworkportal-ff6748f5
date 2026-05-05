@@ -160,8 +160,13 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
       if (isSameMonth(d, monthStart)) holidayCount++;
     });
 
+    // Add implicit absents (past working days with no record/leave/holiday) in this month
+    implicitAbsentDates.forEach((d) => {
+      if (isSameMonth(d, monthStart)) absentCount++;
+    });
+
     return { presentCount, absentCount, halfDayCount, clUsed, elUsed, lwpCount, holidayCount };
-  }, [attendance, leaveRequests, holidays, currentMonth]);
+  }, [attendance, leaveRequests, holidays, currentMonth, implicitAbsentDates]);
 
   return (
     <div className={cn('space-y-4', className)}>
