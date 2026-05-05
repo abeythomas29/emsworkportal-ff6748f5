@@ -175,7 +175,7 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
         }}
         modifiers={{
           present: presentDates,
-          absent: absentDates,
+          absent: allAbsentDates,
           halfDay: halfDayDates,
           casualLeave: clDates,
           earnedLeave: elDates,
