@@ -47,27 +47,32 @@ export function AttendanceCalendar({ attendance, holidays = [], leaveRequests = 
     .filter((r) => r.status === 'half_day')
     .map((r) => new Date(r.date + 'T00:00:00'));
 
-  // Build leave dates from approved leave requests
-  const leaveDatesFromRequests = useMemo(() => {
-    const dates: Date[] = [];
+  // Build leave dates from approved leave requests, split by type
+  const { clDates, elDates, lwpDates } = useMemo(() => {
+    const cl: Date[] = [];
+    const el: Date[] = [];
+    const lwp: Date[] = [];
     leaveRequests
       .filter((lr) => lr.status === 'approved')
       .forEach((lr) => {
         const start = new Date(lr.start_date + 'T00:00:00');
         const end = new Date(lr.end_date + 'T00:00:00');
+        const bucket =
+          lr.leave_type === 'casual' ? cl :
+          lr.leave_type === 'earned' ? el :
+          lr.leave_type === 'lwp' ? lwp : cl;
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-          dates.push(new Date(d));
+          bucket.push(new Date(d));
         }
       });
-    return dates;
-  }, [leaveRequests]);
-
-  // Also include leave status from attendance records
-  const leaveFromAttendance = attendance
-    .filter((r) => r.status === 'leave' || r.status === 'lwp')
-    .map((r) => new Date(r.date + 'T00:00:00'));
-
-  const allLeaveDates = [...leaveDatesFromRequests, ...leaveFromAttendance];
+    // Also include leave status from attendance records (treat plain "leave" as CL)
+    attendance.forEach((r) => {
+      const d = new Date(r.date + 'T00:00:00');
+      if (r.status === 'leave') cl.push(d);
+      else if (r.status === 'lwp') lwp.push(d);
+    });
+    return { clDates: cl, elDates: el, lwpDates: lwp };
+  }, [leaveRequests, attendance]);
 
   // Monthly summary
   const monthlySummary = useMemo(() => {
