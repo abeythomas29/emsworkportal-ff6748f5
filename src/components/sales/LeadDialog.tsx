@@ -42,7 +42,7 @@ export function LeadDialog({ open, onOpenChange, lead }: Props) {
   const [form, setForm] = useState<Partial<Lead>>(empty);
   const create = useCreateLead();
   const update = useUpdateLead();
-  const { data: employees = [] } = useEmployees();
+  const { employees } = useEmployees();
 
   useEffect(() => {
     if (open) {
