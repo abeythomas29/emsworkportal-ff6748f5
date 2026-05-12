@@ -28,6 +28,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicy";
 import ProductionPage from "./pages/Production";
 import SalesPage from "./pages/Sales";
 import RequestsPage from "./pages/Requests";
+import ReimbursementsPage from "./pages/Reimbursements";
 
 const queryClient = new QueryClient();
 
